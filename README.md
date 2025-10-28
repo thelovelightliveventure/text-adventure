@@ -28,3 +28,6 @@ This file holds ```Room``` and ```Location``` classes, along with functions for 
 
 ### ```combat.py```
 This file contains a ```CombatSystem``` class or functions for handling battle sequences.
+
+### ```persistence.py```
+This file contains functions specifically related to user saves and persistence management.

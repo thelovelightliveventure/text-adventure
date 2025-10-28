@@ -1,0 +1,1 @@
+# This file contains functions specifically related to user saves and persistence management.
