@@ -1,0 +1,1 @@
+# This file contains Character class and any functions related to character management.
