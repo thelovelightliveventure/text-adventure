@@ -2,6 +2,7 @@
 Welcome to my text adventure game!
 
 # Files
+```
 .
 ├── gameplay.py
 └── game_logic/
@@ -9,6 +10,7 @@ Welcome to my text adventure game!
     ├── characters.py
     ├── world.py
     └── combat.py
+```
 ### ```gameplay.py```
 This file handles the game's high-level flow, such as presenting information to the player and processing their commands.
 
