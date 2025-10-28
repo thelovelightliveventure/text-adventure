@@ -1,7 +1,11 @@
-from helper import (
-    generate_save_code, load_from_code,
-    render_map, get_command,
-    GossipGenerator, describe_location
+from game_logic import (
+    GossipGenerator, 
+    named_npcs, 
+    load_from_code, 
+    generate_save_code, 
+    render_map, 
+    describe_location, 
+    get_command
 )
 
 # Default starting state
