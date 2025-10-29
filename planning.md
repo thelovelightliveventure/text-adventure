@@ -10,9 +10,12 @@ To develop:
 - CREATURES: make animals stay near where they spawned for consistency
 - COMBAT: you start out with a somehwat useless dagger, determines your damage
 - COMBAT: you die/respawn in the infirmary, and gradually get health
+- COMBAT: make sure the color is different so combat looks cool in console
+- CREATURES: more deer spawn than wolf, etc. also add new animals
+- make console easier to read (not so spaced apart, less line breaks)
 
 Current bugs:
-
+- Deer COMBAT never ends
 
 ---------------------------------
 ---------CODE PLANNING-----------

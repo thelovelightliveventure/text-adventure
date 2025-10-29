@@ -1,4 +1,12 @@
 # This file contains a CombatSystem class or functions for handling battle sequences.
+import time
+
+# Color words in the console
+RED = "\033[31m"
+GREEN = "\033[32m"
+YELLOW = "\033[33m"
+CYAN = "\033[36m"
+RESET = "\033[0m"
 
 def engage_combat(player_state, creature):
     print(f"\nYou encounter a {creature.name}!")
@@ -12,18 +20,21 @@ def engage_combat(player_state, creature):
     action = input("Do you want to [fight], [flee], or [observe]? ").lower()
 
     if action == "fight":
-        print(f"⚔️ You fight the {creature.name}!")
+        print(f"⚔️  You fight the {creature.name}!")
+        time.sleep(0.8)
         player_health = player_state.get("health", 100)
         creature_health = creature.health
 
         while player_health > 0 and creature_health > 0:
             # Player attacks
             creature_health -= creature.damage ### EVENTUALLY CHANGE THIS TO YOUR + WEAPON DAMAGE
-            print(f"You stab the {creature.name}! {creature.name} health -{creature.damage}, now {max(creature_health, 0)}")
+            print(f"You strike! {creature.name} {RED}-{creature.damage} {RESET}HP {CYAN}({max(creature_health, 0)}{RESET}/100)") ### EVENTUALLY CHANGE THE /100 TO /ORIGINAL_HEALTH of CREATURE
+            time.sleep(0.3)            
 
             # Creature attacks
             player_health -= creature.damage 
-            print(f"{creature.name} attacks you! Your health -{creature.damage}, now {max(player_health, 0)}")
+            print(f"{RED}{creature.name} lunges!{RESET} You {RED}-{creature.damage} {RESET}HP {CYAN}({max(player_health, 0)}{RESET}/100)")
+            time.sleep(0.3)
     elif action == "flee":
         print("You flee successfully, but your heart is pounding.")
     elif action == "observe":
