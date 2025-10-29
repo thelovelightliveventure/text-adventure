@@ -19,7 +19,7 @@ def engage_combat(player_state, creature):
         while player_health > 0 and creature_health > 0:
             # Player attacks
             creature_health -= creature.damage ### EVENTUALLY CHANGE THIS TO YOUR + WEAPON DAMAGE
-            print(f"You stab the {creature.name}! {creature.name} health -{creature.damage}, now {max(creature_health), 0}")
+            print(f"You stab the {creature.name}! {creature.name} health -{creature.damage}, now {max(creature_health, 0)}")
 
             # Creature attacks
             player_health -= creature.damage 
