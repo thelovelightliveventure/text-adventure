@@ -2,8 +2,14 @@
 -----------WHILE CODING----------
 ---------------------------------
 Self-notes (notes for coding):
-- Make a help menu for commands and expand menu.
+
+To develop:
+- Make a help menu for commands and expand menu (kill, hunt, loot, examine, n\up=north etc)
 - Make a way for NPCs with backstories to interact with users.
+- COMBAT: add weapons and armor to reduce damage, add creature loot tables, add hunt
+- CREATURES: make animals stay near where they spawned for consistency
+- COMBAT: you start out with a somehwat useless dagger, determines your damage
+- COMBAT: you die/respawn in the infirmary, and gradually get health
 
 Current bugs:
 

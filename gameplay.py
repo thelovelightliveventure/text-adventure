@@ -4,16 +4,20 @@ from game_logic import (
     load_from_code, 
     generate_save_code, 
     render_map, 
+    world_map,
     describe_location, 
-    get_command
+    get_command,
+    forest_creatures,
+    engage_combat
 )
+import random
 
 # Default starting state
 default_state = {
     "name": "User1",
     "role": "Explorer",
-    "location": [0, 0],
-    "inventory": ["backpack", "map"],
+    "location": [5, 5],
+    "inventory": ["backpack", "map", "useless dagger"],
     "quests_completed": [],
     "explored": [(0, 0)],
     "npc_flags": {}     # e.g., {"Blacksmith": {"met": True, "quest_accepted": True}}
@@ -30,7 +34,7 @@ else:
 # Create gossip generator
 gossip_gen = GossipGenerator()
 
-# Game loop
+# Game loop and movement
 while True:
     print(f"\nYou are at {player_state['location']}")
     render_map(player_state["location"], player_state["explored"])
@@ -48,6 +52,14 @@ while True:
         if (x, y) not in player_state["explored"]:
             player_state["explored"].append((x, y))
         print(f"You move {command}.")
+
+        # Trigger random forest encounters
+
+        tile = world_map.get((x, y), {})
+        if tile.get("name") == "Forest":
+            if random.random() < 0.4:
+                creature = random.choice(forest_creatures)
+                engage_combat(player_state, creature)
     
     elif command == "inventory":
         print("Inventory:", player_state["inventory"])
@@ -63,6 +75,12 @@ while True:
     
     elif command == "help":
         print("Commands: north, south, east, west, inventory, save, help, quit")
+
+    elif command == "status":
+        print(f"Health: {player_state.get('health', 100)}")
+        print(f"Food: {player_state.get('food', 0)}")
+        print(f"Inventory: {player_state["inventory"]}")
     
     else:
         print("Unknown command. Try north, south, east, west, inventory, save, help, or quit.")
+
