@@ -65,6 +65,11 @@ def main(stdscr, initial_save_code=None):
     else:
         player_state = default_state
 
+    # Ensure starting position is marked explored so player marker shows immediately
+    start_loc = tuple(player_state.get("location", [0, 0]))
+    if start_loc not in player_state.get("explored", []):
+        player_state.setdefault("explored", []).append(start_loc)
+
     # Create gossip generator
     gossip_gen = GossipGenerator()
 
@@ -93,19 +98,46 @@ def main(stdscr, initial_save_code=None):
         return None, None, None
 
     while True:
-        if player_state.get("health", 100) <= 0:
-            input_win.clear()
-            input_win.box()
-            input_win.addstr(1, 2, "You collapse from your wounds...")
-            input_win.addstr(2, 2, "You awaken in the Infirmary, patched up but shaken.")
-            input_win.refresh()
-            curses.napms(2000)
+        # If dead, move to infirmary and enter resting mode (health regenerates incrementally).
+        if player_state.get("health", 100) <= 0 and not player_state.get("resting"):
+            show_msg(input_win, ["You collapse from your wounds...", "You awaken in the Infirmary."], wait_ms=1600)
             player_state["location"] = [5, 3]
-            player_state["health"] = 100
+            # keep the player barely alive and set resting state
+            player_state["health"] = max(1, player_state.get("health", 0))
+            player_state["resting"] = True
+            player_state.setdefault("rest_regen", 6)  # HP regained per loop while resting
 
         render_map(map_win, player_state)
         render_info(info_win, player_state)
+
+        # If the player is resting, only allow 'stand' command (health increments each loop).
+        if player_state.get("resting"):
+            # Regen HP (capped to 100)
+            regen = player_state.get("rest_regen", 5)
+            old_hp = player_state.get("health", 0)
+            player_state["health"] = min(100, old_hp + regen)
+            gained = player_state["health"] - old_hp
+            show_msg(input_win, [f"Resting... +{gained} HP", "Type 'stand' to stand."], wait_ms=800)
+
+            command = get_command(input_win)
+            if not command:
+                continue
+            command = command.strip().lower()
+            if command == "stand":
+                player_state["resting"] = False
+                show_msg(input_win, ["You stand up, ready to continue."], wait_ms=900)
+            else:
+                show_msg(input_win, ["You are resting. Type 'stand' to stand."], wait_ms=900)
+            continue
+
         command = get_command(input_win)
+        # sanitize command input: ignore empty or stray "!" inputs and normalize
+        if not command:
+            continue
+        command = command.strip()
+        if command == "!":
+            continue
+        command = command.lower()
 
         if command in ["north", "south", "east", "west"]:
             (x, y) = player_state["location"]
@@ -130,14 +162,28 @@ def main(stdscr, initial_save_code=None):
                 # Random being encountered event
                 if random.random() < 0.4:
                     creature = random.choice(forest_creatures)
-                    engage_combat(input_win, player_state, creature)
-                # Random becoming poisoned event
-                if random.random() < 0.2:
-                    show_msg(input_win, [
-                        "The creature bites you!",
-                        "You feel a burning sensation... You're poisoned!"
-                    ], wait_ms=1400)
-                    player_state["status_effects"].append("Poisoned")
+                    # skip invalid creature entries (guard against None or malformed entries)
+                    if not creature or (isinstance(creature, dict) and not creature.get("name")):
+                        # no creature spawned — safe skip
+                        continue
+
+                    combat_result = engage_combat(input_win, player_state, creature)
+                    # Decide if the player was bitten:
+                    bitten = False
+                    if isinstance(combat_result, dict):
+                        # if engage_combat returns structured info, respect it
+                        bitten = combat_result.get("player_bitten", False)
+                    else:
+                        # unknown return: fall back to a small random chance
+                        if random.random() < 0.1:
+                            bitten = True
+
+                    if bitten:
+                        show_msg(input_win, [
+                            "The creature bites you!",
+                            "You feel a burning sensation... You're poisoned!"
+                        ], wait_ms=1400)
+                        player_state.setdefault("status_effects", []).append("Poisoned")
 
         elif command == "inventory":
             show_msg(input_win, [f"Inventory: {', '.join(player_state.get('inventory', []))}"], wait_ms=1400)
@@ -151,10 +197,15 @@ def main(stdscr, initial_save_code=None):
                 player_state["inventory"].pop(idx)
                 # apply effects
                 gain_food = template.get("food", 0)
-                gain_hp = template.get("hp", 0)
+                # If the template specifies hp, use it; otherwise give a small hp gain
+                if "hp" in template:
+                    gain_hp = template.get("hp", 0)
+                else:
+                    gain_hp = max(1, gain_food // 5)
                 effect = template.get("effect")
                 player_state["food"] = player_state.get("food", 0) + gain_food
-                player_state["health"] = player_state.get("health", 100) + gain_hp
+                # apply hp but cap at 100
+                player_state["health"] = min(100, player_state.get("health", 100) + gain_hp)
                 if effect:
                     # simple behavior: add the effect name; you can extend this to track durations
                     player_state.setdefault("status_effects", []).append(effect)
