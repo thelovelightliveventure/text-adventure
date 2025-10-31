@@ -77,15 +77,26 @@ def main(stdscr, initial_save_code=None):
         command = get_command(input_win)
 
         if command in ["north", "south", "east", "west"]:
-            x, y = player_state["location"]
-            if command == "north": y += 1
-            elif command == "south": y -= 1
-            elif command == "east": x += 1
-            elif command == "west": x -= 1
-            player_state["location"] = [x, y]
-            if (x, y) not in player_state["explored"]:
-                player_state["explored"].append((x, y))
+            (x, y) = player_state["location"]
+            current_tile = world_map.get((x, y), {})
+            doors = current_tile.get("doors", [])
+        
+            if command in doors:
+                if command == "north": y -= 1
+                elif command == "south": y += 1
+                elif command == "east": x += 1
+                elif command == "west": x -= 1
+                player_state["location"] = [x, y]
+                if (x, y) not in player_state["explored"]:
+                    player_state["explored"].append((x, y))
+            else:
+                input_win.clear()
+                input_win.box()
+                input_win.addstr(1, 2, f"You can't go {command} from here.")
+                input_win.refresh()
+                input_win.getch()
 
+            # Random encounter in the forest
             tile = world_map.get((x, y), {})
             if tile.get("name") == "Forest":
                 if random.random() < 0.4:
