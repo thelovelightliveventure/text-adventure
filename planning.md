@@ -16,10 +16,11 @@ To develop:
 - make console easier to read (not so spaced apart, less line breaks)
 - CONSOLE: kill will always try to find someone, otherwise "there is nothing nearby to kill"
 - change cure and infirmary health bar effects
-- the characters gossip overwrites boundary lines
+- User needs to customize name
 
 Current bugs:
-- Deer COMBAT never ends
+- the characters gossip overwrites boundary lines
+
 
 ---------------------------------
 ---------CODE PLANNING-----------
