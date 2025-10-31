@@ -4,3 +4,4 @@ from .world import render_map, world_map
 from .creatures import forest_creatures
 from .combat import engage_combat
 from .interface import render_info, get_command
+from .food import food

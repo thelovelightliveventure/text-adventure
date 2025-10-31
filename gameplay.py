@@ -8,7 +8,8 @@ from game_logic import (
     get_command,
     world_map, 
     forest_creatures,
-    engage_combat
+    engage_combat,
+    food
 )
 import random, curses
 import sys
@@ -52,6 +53,9 @@ def main(stdscr, initial_save_code=None):
         "inventory": ["backpack", "map", "useless dagger"],
         "quests_completed": [],
         "explored": [(0, 0)],
+        "status_effects": [],  # list of active effect names, e.g. ["Poisoned"]
+        "food": 100,
+        "health": 100,
         "npc_flags": {}     # e.g., {"Blacksmith": {"met": True, "quest_accepted": True}}
     }
 
@@ -63,6 +67,30 @@ def main(stdscr, initial_save_code=None):
 
     # Create gossip generator
     gossip_gen = GossipGenerator()
+
+    # Helper to show a brief message without forcing an extra keypress.
+    # Use wait_ms to control how long the message stays visible (milliseconds).
+    def show_msg(win, lines, wait_ms=1200):
+        win.clear()
+        win.box()
+        for i, ln in enumerate(lines, start=1):
+            try:
+                win.addstr(i, 2, ln)
+            except curses.error:
+                # ignore if window too small
+                pass
+        win.refresh()
+        curses.napms(wait_ms)
+
+    # Find the first food in inventory that matches the templates.
+    # Returns (index, inventory_name, template) or (None, None, None).
+    def find_food(inventory):
+        for i, item in enumerate(inventory):
+            lname = item.lower()
+            for template in food:
+                if any(tok in lname for tok in template["match"]):
+                    return i, item, template
+        return None, None, None
 
     while True:
         if player_state.get("health", 100) <= 0:
@@ -82,9 +110,10 @@ def main(stdscr, initial_save_code=None):
         if command in ["north", "south", "east", "west"]:
             (x, y) = player_state["location"]
             current_tile = world_map.get((x, y), {})
-            doors = current_tile.get("doors", [])
-        
-            if command in doors:
+            # If a tile defines "doors" it restricts allowed exits.
+            # If "doors" is absent (outdoor/open tiles), allow movement freely.
+            doors = current_tile.get("doors", None)
+            if (doors is None) or (command in doors):
                 if command == "north": y -= 1
                 elif command == "south": y += 1
                 elif command == "east": x += 1
@@ -93,34 +122,57 @@ def main(stdscr, initial_save_code=None):
                 if (x, y) not in player_state["explored"]:
                     player_state["explored"].append((x, y))
             else:
-                input_win.clear()
-                input_win.box()
-                input_win.addstr(1, 2, f"You can't go {command} from here.")
-                input_win.refresh()
-                input_win.getch()
-
+                show_msg(input_win, [f"You can't go {command} from here."], wait_ms=900)
+                
             # Random encounter in the forest
             tile = world_map.get((x, y), {})
             if tile.get("name") == "Forest":
+                # Random being encountered event
                 if random.random() < 0.4:
                     creature = random.choice(forest_creatures)
                     engage_combat(input_win, player_state, creature)
+                # Random becoming poisoned event
+                if random.random() < 0.2:
+                    show_msg(input_win, [
+                        "The creature bites you!",
+                        "You feel a burning sensation... You're poisoned!"
+                    ], wait_ms=1400)
+                    player_state["status_effects"].append("Poisoned")
 
         elif command == "inventory":
-            input_win.clear()
-            input_win.box()
-            input_win.addstr(1, 2, f"Inventory: {', '.join(player_state['inventory'])}")
-            input_win.refresh()
-            input_win.getch()
+            show_msg(input_win, [f"Inventory: {', '.join(player_state.get('inventory', []))}"], wait_ms=1400)
+
+
+        elif command == "eat":
+            # Use the consumable templates above to find and apply an item.
+            idx, item_name, template = find_food(player_state.get("inventory", []))
+            if idx is not None:
+                # remove item
+                player_state["inventory"].pop(idx)
+                # apply effects
+                gain_food = template.get("food", 0)
+                gain_hp = template.get("hp", 0)
+                effect = template.get("effect")
+                player_state["food"] = player_state.get("food", 0) + gain_food
+                player_state["health"] = player_state.get("health", 100) + gain_hp
+                if effect:
+                    # simple behavior: add the effect name; you can extend this to track durations
+                    player_state.setdefault("status_effects", []).append(effect)
+                show_msg(input_win, [f"You eat the {item_name}. (+{gain_food} food{', ' + str(gain_hp) + ' hp' if gain_hp else ''})"], wait_ms=1300)
+            else:
+                show_msg(input_win, ["You have nothing edible."], wait_ms=1000)
+
+        elif command == "cure":
+            effects = player_state.get("status_effects", [])
+            if "Poisoned" in effects:
+                player_state["status_effects"].remove("Poisoned")
+                show_msg(input_win, ["You take a tonic and feel the poison fade."], wait_ms=1200)
+            else:
+                show_msg(input_win, ["You're not poisoned."], wait_ms=900)
 
         elif command == "save":
             code = generate_save_code(player_state)
-            input_win.clear()
-            input_win.box()
-            input_win.addstr(1, 2, "Your save code:")
-            input_win.addstr(2, 2, code)
-            input_win.refresh()
-            input_win.getch()
+            show_msg(input_win, ["Your save code:", code], wait_ms=2800)
 
         elif command == "quit":
             input_win.clear()
@@ -131,30 +183,21 @@ def main(stdscr, initial_save_code=None):
             break
 
         elif command == "help":
-            input_win.clear()
-            input_win.box()
-            input_win.addstr(1, 2, "Commands: north, south, east, west, inventory, save, help, quit")
-            input_win.refresh()
-            input_win.getch()
+            show_msg(input_win, ["Commands: north, south, east, west, inventory, save, help, quit"], wait_ms=1500)
 
         elif command == "status":
-            input_win.clear()
-            input_win.box()
-            input_win.addstr(1, 2, f"Health: {player_state.get('health', 100)}")
-            input_win.addstr(2, 2, f"Food: {player_state.get('food', 0)}")
-            input_win.addstr(3, 2, f"Inventory: {', '.join(player_state['inventory'])}")
-            input_win.refresh()
-            input_win.getch()
-
+            effects = player_state.get("status_effects", [])
+            if effects:
+                show_msg(input_win, [f"Status Effects: {', '.join(effects)}"], wait_ms=1400)
+            else:
+                show_msg(input_win, ["You're feeling fine."], wait_ms=900)
         else:
-            input_win.clear()
-            input_win.box()
-            input_win.addstr(1, 2, "Unknown command.")
-            input_win.addstr(2, 2, "Try: north, south, east, west, inventory, save, help, quit")
-            input_win.refresh()
-            input_win.getch()
-
-    ###################### END GAME LOOP ##################################
+            show_msg(input_win, [
+                f"Unknown command: {command}",
+                "Try: north, south, east, west, inventory, save, help, quit"
+            ], wait_ms=1200)
+#
+# ...existing code...
     
 if __name__ == "__main__":
     try:
@@ -170,8 +213,9 @@ if __name__ == "__main__":
     import traceback
     try:
         curses.wrapper(lambda stdscr: main(stdscr, initial_save_code))
-    except Exception:
-        with open("c:\\Users\\7tujo\\Programming\\text-adventure\\curses_error.log", "w", encoding="utf-8") as f:
+    except Exception as e:
+        with open("error.log", "w", encoding="utf-8") as f:
             f.write("Unhandled exception in curses UI:\n\n")
             traceback.print_exc(file=f)
         print("Curses UI crashed — see curses_error.log for details.")
+        print("Error:", e)
