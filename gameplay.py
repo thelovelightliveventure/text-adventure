@@ -10,7 +10,8 @@ from game_logic import (
     forest_creatures,
     engage_combat,
     food,
-    render_char
+    render_char,
+    normalize_direction
 )
 import random, curses
 import sys
@@ -157,8 +158,9 @@ def main(stdscr, initial_save_code=None):
         # ignore single non-alphanumeric characters (covers stray "!" etc.)
         if len(command) == 1 and not command.isalnum():
             continue
-        command = command.lower()
 
+        command = normalize_direction(command) or command
+        
         if command in ["north", "south", "east", "west"]:
             (x, y) = player_state["location"]
             current_tile = world_map.get((x, y), {})
@@ -230,7 +232,7 @@ def main(stdscr, initial_save_code=None):
                 if effect:
                     # simple behavior: add the effect name; you can extend this to track durations
                     player_state.setdefault("status_effects", []).append(effect)
-                show_msg(input_win, [f"You eat the {item_name}. (+{gain_food} food{', ' + str(gain_hp) + ' hp' if gain_hp else ''})"], wait_ms=1300)
+                show_msg(input_win, [f"You eat the {item_name}{printEffect}. (+{gain_food} food{', ' + str(gain_hp) + ' hp' if gain_hp else ''})"], wait_ms=1300)
             else:
                 show_msg(input_win, ["You have nothing edible."], wait_ms=1000)
 

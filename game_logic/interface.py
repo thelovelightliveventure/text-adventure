@@ -48,7 +48,7 @@ def render_info(win, player_state):
     win.addstr(5, 2, f"Inventory: {', '.join(inventory)}")
     win.refresh()
     
-def get_command(win):
+"""def get_command(win):
     win.clear()
     win.box()
     win.addstr(1, 2, "What do you want to do? ")
@@ -57,3 +57,4 @@ def get_command(win):
     command = win.getstr(2, 2).decode("utf-8").strip()
     curses.noecho()
     return command
+"""
