@@ -16,9 +16,7 @@ To develop:
 - make console easier to read (not so spaced apart, less line breaks)
 - CONSOLE: kill will always try to find someone, otherwise "there is nothing nearby to kill"
 - change cure and infirmary health bar effects
-- Add EAT function:
-        player_state["food"] += 30
-        player_state["status_effects"].append("Well Fed")
+- the characters gossip overwrites boundary lines
 
 Current bugs:
 - Deer COMBAT never ends

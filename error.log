@@ -1,0 +1,18 @@
+Unhandled exception in curses UI:
+
+Traceback (most recent call last):
+  File "C:\Users\7tujo\Programming\text-adventure\gameplay.py", line 293, in <module>
+    curses.wrapper(lambda stdscr: main(stdscr, initial_save_code))
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.2544.0_x64__qbz5n2kfra8p0\Lib\curses\__init__.py", line 94, in wrapper
+    return func(stdscr, *args, **kwds)
+  File "C:\Users\7tujo\Programming\text-adventure\gameplay.py", line 293, in <lambda>
+    curses.wrapper(lambda stdscr: main(stdscr, initial_save_code))
+                                  ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\7tujo\Programming\text-adventure\gameplay.py", line 117, in main
+    render_char(char_win, player_state, named_npcs, gossip_gen)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\7tujo\Programming\text-adventure\game_logic\characters.py", line 35, in render_char
+    win.addstr(1, 2, "Characters in Town:")
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_curses.error: addwstr() returned ERR

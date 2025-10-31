@@ -19,8 +19,20 @@ import sys
 def main(stdscr, initial_save_code=None):
     curses.curs_set(0) # Hide cursor
     curses.start_color()
-    curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK) # Heath
-    curses.init_pair(2, curses.COLOR_YELLOW, curses.COLOR_BLACK) # Hunger
+    # allow terminal default background (better on Windows)
+    try:
+        curses.use_default_colors()
+    except Exception:
+        pass
+    # Basic UI pairs
+    curses.init_pair(1, curses.COLOR_RED, -1)    # Health / emphasis
+    curses.init_pair(2, curses.COLOR_YELLOW, -1) # Hunger / emphasis
+    # Map color pairs (must match world.render_map usage)
+    curses.init_pair(3, curses.COLOR_GREEN, -1)  # Forest
+    curses.init_pair(4, curses.COLOR_YELLOW, -1) # Village / brownish
+    curses.init_pair(5, curses.COLOR_RED, -1)    # Village center (strong red)
+    curses.init_pair(6, curses.COLOR_WHITE, -1)  # Unknown / default
+    curses.init_pair(7, curses.COLOR_CYAN, -1)   # Player highlight
 
     # For debugging ------
     stdscr.addstr(0, 0, "Game is starting...")

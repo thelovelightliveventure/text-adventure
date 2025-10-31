@@ -1,5 +1,16 @@
 # Welcome!
-Welcome to my text adventure game!
+Welcome to my text adventure game! This is a game that's in progress. Thank you for your patience as I work things out!
+
+# How to run
+I've personally only tested this game in Windows Terminal (CMD). To run in Windows Terminal:
+
+1. Open Windows Terminal (Win + R, "cmd", Enter)
+2. Navigate to the folder in which ```gameplay.py``` is located.
+3. Run ```python gameplay.py``` and have fun!
+
+Notes: 
+- This game cannot be run through VS Code terminal because it uses ```curses```.
+- Python 3.11 is the recommended Python version.
 
 # Files
 ```
