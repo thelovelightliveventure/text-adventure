@@ -28,12 +28,12 @@ def engage_combat(player_state, creature):
         while player_health > 0 and creature_health > 0:
             # Player attacks
             creature_health -= creature.damage ### EVENTUALLY CHANGE THIS TO YOUR + WEAPON DAMAGE
-            print(f"You strike! {creature.name} {RED}-{creature.damage} {RESET}HP {CYAN}({max(creature_health, 0)}{RESET}/100)") ### EVENTUALLY CHANGE THE /100 TO /ORIGINAL_HEALTH of CREATURE
+            print(f"You strike! {creature.name} -{creature.damage} HP ({CYAN}{max(creature_health, 0)}{RESET}/100)") ### EVENTUALLY CHANGE THE /100 TO /ORIGINAL_HEALTH of CREATURE
             time.sleep(0.3)            
 
             # Creature attacks
             player_health -= creature.damage 
-            print(f"{RED}{creature.name} lunges!{RESET} You {RED}-{creature.damage} {RESET}HP {CYAN}({max(player_health, 0)}{RESET}/100)")
+            print(f"{RED}{creature.name} lunges!{RESET} You {RED}-{creature.damage} {RESET}HP ({CYAN}{max(player_health, 0)}{RESET}/100)")
             time.sleep(0.3)
     elif action == "flee":
         print("You flee successfully, but your heart is pounding.")

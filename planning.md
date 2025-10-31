@@ -5,14 +5,15 @@ Self-notes (notes for coding):
 
 To develop:
 - Make a help menu for commands and expand menu (kill, hunt, loot, examine, n\up=north etc)
-- Make a way for NPCs with backstories to interact with users.
+- CHARACTERS: Make a way for NPCs with backstories to interact with users.
 - COMBAT: add weapons and armor to reduce damage, add creature loot tables, add hunt
 - CREATURES: make animals stay near where they spawned for consistency
-- COMBAT: you start out with a somehwat useless dagger, determines your damage
+- COMBAT: you start out with a somewhat useless dagger, determines your damage
 - COMBAT: you die/respawn in the infirmary, and gradually get health
 - COMBAT: make sure the color is different so combat looks cool in console
-- CREATURES: more deer spawn than wolf, etc. also add new animals
+- CREATURES: more deer spawn than wolf, etc. also add new animals, and animals start with diff health
 - make console easier to read (not so spaced apart, less line breaks)
+- CONSOLE: kill will always try to find someone, otherwise "there is nothing nearby to kill"
 
 Current bugs:
 - Deer COMBAT never ends

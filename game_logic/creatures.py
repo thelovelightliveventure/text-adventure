@@ -19,8 +19,8 @@ class Creature:
 def boar_hostility(player_state):
     return "boar_attacked" in player_state.get("flags", {})
 
-wild_boar = Creature("Wild Boar", "conditional", damage = 10, food_reward = 40, hostility_check = boar_hostility)
-deer = Creature("Deer", "passive", damage = 0, food_reward = 20)
-wolf = Creature("Wolf", "aggressive", damage = 15, food_reward = 10)
+wild_boar = Creature("Wild Boar", "conditional", damage = 10, food_reward = 40, health = 40, hostility_check = boar_hostility)
+deer = Creature("Deer", "passive", damage = 5, food_reward = 15, health = 30)
+wolf = Creature("Wolf", "aggressive", damage = 15, food_reward = 10, health = 75)
 
 forest_creatures = [wild_boar, deer, wolf]
