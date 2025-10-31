@@ -29,6 +29,20 @@ class GossipGenerator:
         self.gossip_list.remove(gossip)
         return gossip
 
+def render_char(win, player_state, named_npcs, gossip_gen):
+    win.clear()
+    win.box()
+    win.addstr(1, 2, "Characters in Town:")
+    y = 2
+    for npc_key, npc in named_npcs.items():
+        if npc.met:
+            win.addstr(y, 4, f"- {npc.name} ({npc.role})")
+            y += 1
+    win.addstr(y + 1, 2, "Gossip:")
+    gossip = gossip_gen.get_gossip()
+    win.addstr(y + 2, 4, f"\"{gossip}\"")
+    win.refresh()
+
 class NPC:
     def __init__(self, name, role, dialogue, quest=None):
         self.name = name

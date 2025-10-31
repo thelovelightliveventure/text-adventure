@@ -9,25 +9,25 @@ food = [
     {
         "name": "Deer Meat",
         "match": ["deer", "meat"], 
-        "food": 25, "hp": 0,  
+        "food": 25, "hp": 10,  
         "effect": "Well Fed"
     },
     {
         "name": "Boar Meat",
         "match": ["boar", "vvoard", "meat"],
-        "food": 40, "hp": 0,
+        "food": 40, "hp": 10,
         "effect": "Well Fed"
     },
     {
         "name": "Generic Meat",
         "match": ["meat"],
-        "food": 30, "hp": 0,
+        "food": 30, "hp": 10,
         "effect": "Well Fed"
     },
     {
         "name": "Apple",
         "match": ["apple", "fruit"], 
-        "food": 10, "hp": 0
+        "food": 10, "hp": 5
     },
     {
         "name": "Wild Mushroom",

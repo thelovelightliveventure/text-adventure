@@ -9,7 +9,8 @@ from game_logic import (
     world_map, 
     forest_creatures,
     engage_combat,
-    food
+    food,
+    render_char
 )
 import random, curses
 import sys
@@ -29,18 +30,22 @@ def main(stdscr, initial_save_code=None):
     stdscr.clear()
     stdscr.refresh()
 
-    # Initialize windows (keep them within screen bounds)
+  # Initialize windows (keep them within screen bounds)
     height, width = stdscr.getmaxyx()
-    # desired input area height
     input_h = 9
-    # make sure there's room for top area
     if input_h >= height - 3:
         input_h = max(3, height // 4)
     top_h = height - input_h
 
     left_w = width // 2
     right_w = width - left_w
-    map_win = curses.newwin(top_h, left_w, 0, 0)
+
+    # split left area vertically: top = map, bottom = characters list
+    left_top_h = max(3, top_h // 2)
+    left_bottom_h = top_h - left_top_h
+
+    map_win = curses.newwin(left_top_h, left_w, 0, 0)
+    char_win = curses.newwin(left_bottom_h, left_w, left_top_h, 0)
     info_win = curses.newwin(top_h, right_w, 0, left_w)
     input_win = curses.newwin(input_h, width, top_h, 0)
 
@@ -108,6 +113,7 @@ def main(stdscr, initial_save_code=None):
             player_state.setdefault("rest_regen", 6)  # HP regained per loop while resting
 
         render_map(map_win, player_state)
+        render_char(char_win, player_state, named_npcs, gossip_gen)
         render_info(info_win, player_state)
 
         # If the player is resting, only allow 'stand' command (health increments each loop).
@@ -119,10 +125,18 @@ def main(stdscr, initial_save_code=None):
             gained = player_state["health"] - old_hp
             show_msg(input_win, [f"Resting... +{gained} HP", "Type 'stand' to stand."], wait_ms=800)
 
+            # Clear input window to remove any stray characters before reading input.
+            input_win.clear()
+            input_win.box()
+            input_win.refresh()
             command = get_command(input_win)
             if not command:
                 continue
-            command = command.strip().lower()
+            command = command.strip()
+            # Ignore single stray punctuation like "!" or other non-alphanumeric single chars
+            if len(command) == 1 and not command.isalnum():
+                continue
+            command = command.lower()
             if command == "stand":
                 player_state["resting"] = False
                 show_msg(input_win, ["You stand up, ready to continue."], wait_ms=900)
@@ -130,12 +144,18 @@ def main(stdscr, initial_save_code=None):
                 show_msg(input_win, ["You are resting. Type 'stand' to stand."], wait_ms=900)
             continue
 
+        # Clear input window before prompting so leftover characters (like a stray "!")
+        # don't remain visible and don't confuse get_command.
+        input_win.clear()
+        input_win.box()
+        input_win.refresh()
         command = get_command(input_win)
-        # sanitize command input: ignore empty or stray "!" inputs and normalize
+        # sanitize command input: ignore empty or stray single-punctuation inputs and normalize
         if not command:
             continue
         command = command.strip()
-        if command == "!":
+        # ignore single non-alphanumeric characters (covers stray "!" etc.)
+        if len(command) == 1 and not command.isalnum():
             continue
         command = command.lower()
 
@@ -203,6 +223,7 @@ def main(stdscr, initial_save_code=None):
                 else:
                     gain_hp = max(1, gain_food // 5)
                 effect = template.get("effect")
+                printEffect = f"and are now {effect}"
                 player_state["food"] = player_state.get("food", 0) + gain_food
                 # apply hp but cap at 100
                 player_state["health"] = min(100, player_state.get("health", 100) + gain_hp)
@@ -212,6 +233,10 @@ def main(stdscr, initial_save_code=None):
                 show_msg(input_win, [f"You eat the {item_name}. (+{gain_food} food{', ' + str(gain_hp) + ' hp' if gain_hp else ''})"], wait_ms=1300)
             else:
                 show_msg(input_win, ["You have nothing edible."], wait_ms=1000)
+
+        elif command == "home":
+            player_state["location"] = [5, 5]
+            show_msg(input_win, ["You return to the Village Center."], wait_ms=900)
 
         elif command == "cure":
             effects = player_state.get("status_effects", [])
