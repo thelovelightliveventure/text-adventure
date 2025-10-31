@@ -1,5 +1,5 @@
-# This file contains a CombatSystem class or functions for handling battle sequences.
-import time
+# This file contains combat functions for handling battle sequences.
+import curses
 
 # Color words in the console
 RED = "\033[31m"
@@ -8,36 +8,77 @@ YELLOW = "\033[33m"
 CYAN = "\033[36m"
 RESET = "\033[0m"
 
-def engage_combat(player_state, creature):
-    print(f"\nYou encounter a {creature.name}!")
+def engage_combat(win, player_state, creature):
+    win.clear()
+    win.box()
+    win.addstr(1, 2, f"You encounter a {creature.name}!")
+    win.addstr(2, 2, f"The {creature.name} looks {'hostile' if creature.is_hostile(player_state) else 'peaceful'}.")
+    win.addstr(3, 2, "Do you want to [fight], [flee], or [observe]? ")
+    win.refresh()
 
-    hostile = creature.is_hostile(player_state)
-    if hostile:
-        print(f"The {creature.name} looks hostile!")
-    else:
-        print(f"The {creature.name} looks peaceful.")
-
-    action = input("Do you want to [fight], [flee], or [observe]? ").lower()
+    curses.echo()
+    action = win.getstr(4, 2).decode("utf-8").strip().lower()
+    curses.noecho()
 
     if action == "fight":
-        print(f"⚔️  You fight the {creature.name}!")
-        time.sleep(0.8)
         player_health = player_state.get("health", 100)
         creature_health = creature.health
 
         while player_health > 0 and creature_health > 0:
+            win.clear()
+            win.box()
             # Player attacks
-            creature_health -= creature.damage ### EVENTUALLY CHANGE THIS TO YOUR + WEAPON DAMAGE
-            print(f"You strike! {creature.name} -{creature.damage} HP ({CYAN}{max(creature_health, 0)}{RESET}/{creature.health})") ### EVENTUALLY CHANGE THE /100 TO /ORIGINAL_HEALTH of CREATURE
-            time.sleep(0.3)            
+            creature_health -= creature.damage
+            win.addstr(1, 2, f"You strike! {creature.name} -{creature.damage} HP ({max(creature_health, 0)}/{creature.health})")
 
             # Creature attacks
-            player_health -= creature.damage 
-            print(f"{RED}{creature.name} lunges!{RESET} You {RED}-{creature.damage} {RESET}HP ({CYAN}{max(player_health, 0)}{RESET}/100)")
-            time.sleep(0.3)
+            player_health -= creature.damage
+            win.addstr(2, 2, f"{creature.name} lunges! You -{creature.damage} HP ({max(player_health, 0)}/100)")
+
+            win.addstr(4, 2, "Press Enter to continue...")
+            win.refresh()
+            win.getch()
+
+        if player_health <= 0:
+            win.clear()
+            win.box()
+            win.addstr(1, 2, "You collapse from your wounds...")
+            win.addstr(2, 2, "You awaken in the Infirmary, patched up but shaken.")
+            player_state["location"] = [5, 3]
+            player_health = 100
+            win.refresh()
+            curses.napms(2000)
+
+        else:
+            win.clear()
+            win.box()
+            win.addstr(1, 2, f"✅ You defeated the {creature.name}!")
+            win.addstr(2, 2, f"You collect {creature.food_reward} food and some meat.")
+            player_state["inventory"].append(f"{creature.name} meat")
+            player_state["food"] = player_state.get("food", 0) + creature.food_reward
+            player_state.setdefault("flags", {})[f"{creature.name.lower()}_attacked"] = True
+            win.refresh()
+            win.getch()
+
+        player_state["health"] = player_health
+
     elif action == "flee":
-        print("You flee successfully, but your heart is pounding.")
+        win.clear()
+        win.box()
+        win.addstr(1, 2, "You flee successfully, but your heart is pounding.")
+        win.refresh()
+        win.getch()
+
     elif action == "observe":
-        print(f"You watch the {creature.name}. It does not react.")
-    else: 
-        print("You hesitate. The moment passes.")
+        win.clear()
+        win.box()
+        win.addstr(1, 2, f"You watch the {creature.name}. It does not react.")
+        win.refresh()
+        win.getch()
+
+    else:
+        win.clear()
+        win.box()
+        win.addstr(1, 2, "You hesitate. The moment passes.")
+        win.refresh()
+        win.getch()

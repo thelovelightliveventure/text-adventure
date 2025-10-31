@@ -5,7 +5,7 @@ Self-notes (notes for coding):
 - Adapt to curses
 
 To develop:
-- Make a help menu for commands and expand menu (kill, hunt, loot, examine, n\up=north etc)
+- CONSOLE: Make a help menu for commands and expand menu (kill, hunt, loot, examine, n\up=north etc)
 - CHARACTERS: Make a way for NPCs with backstories to interact with users.
 - COMBAT: add weapons and armor to reduce damage, add creature loot tables, add hunt
 - CREATURES: make animals stay near where they spawned for consistency

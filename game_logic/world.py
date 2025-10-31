@@ -4,23 +4,14 @@ from .characters import NPC, mayor, blacksmith, farmer, guard, child
 ######### Map Rendering ###########
 ###################################
 
-def render_map(location, explored):
-    x, y = location
-    print("\nMap:")
-    for row in range(-1, 2):
-        for col in range(-1, 2):
-            pos = (x + col, y + row)
-            if pos == tuple(location):
-                print("[X]", end=" ")
-            elif pos in explored:
-                print("[ ]", end=" ")
-            else:
-                print(" . ", end=" ")
-        print()
-    print()
+def render_map(win, player_state):
+    win.clear()
+    win.box()
+    win.addstr(1, 2, f"Location: {player_state['location']}")
+    # Add more map details here
 
-def get_command():
-    return input("\nWhat do you want to do? ").strip().lower()
+    win.refresh()
+
 
 #####################
 ##### WORLD MAP #####
