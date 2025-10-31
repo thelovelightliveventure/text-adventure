@@ -28,7 +28,7 @@ def engage_combat(player_state, creature):
         while player_health > 0 and creature_health > 0:
             # Player attacks
             creature_health -= creature.damage ### EVENTUALLY CHANGE THIS TO YOUR + WEAPON DAMAGE
-            print(f"You strike! {creature.name} -{creature.damage} HP ({CYAN}{max(creature_health, 0)}{RESET}/100)") ### EVENTUALLY CHANGE THE /100 TO /ORIGINAL_HEALTH of CREATURE
+            print(f"You strike! {creature.name} -{creature.damage} HP ({CYAN}{max(creature_health, 0)}{RESET}/{creature.health})") ### EVENTUALLY CHANGE THE /100 TO /ORIGINAL_HEALTH of CREATURE
             time.sleep(0.3)            
 
             # Creature attacks

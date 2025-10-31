@@ -36,6 +36,13 @@ gossip_gen = GossipGenerator()
 
 # Game loop and movement
 while True:
+    if player_state.get("health", 100) <= 0:
+        print("\n 💀 You collapse from your wounds...")
+        print("You awaken in the Infirmary, patched up but shaken.")
+        player_state["location"] = [5, 3] # Infirmary coordinates
+        while player_state.get("health", 100) <= 100:
+            player_state["health"] += 10
+
     print(f"\nYou are at {player_state['location']}")
     render_map(player_state["location"], player_state["explored"])
     describe_location(player_state["location"], gossip_gen, player_state)

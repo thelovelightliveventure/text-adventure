@@ -2,6 +2,7 @@
 -----------WHILE CODING----------
 ---------------------------------
 Self-notes (notes for coding):
+- Adapt to curses
 
 To develop:
 - Make a help menu for commands and expand menu (kill, hunt, loot, examine, n\up=north etc)

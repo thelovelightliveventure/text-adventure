@@ -43,7 +43,7 @@ world_map[(5, 7)] = {"name": "Mayor's House", "features": ["Mayor's Map"], "npcs
 world_map[(4, 5)] = {"name": "West Street", "npcs": [blacksmith]}
 world_map[(6, 5)] = {"name": "East Street", "npcs": [farmer]}
 world_map[(5, 4)] = {"name": "South Street", "npcs": [guard]}
-world_map[(5, 3)] = {"name": "Infirmary", "features": ["Bandages", "Herbal Tonic"]}
+world_map[(5, 3)] = {"name": "Infirmary", "features": ["Bandages", "Herbal Tonic", "Quiet Beds"]}
 
 
 # Location description function
