@@ -3,6 +3,44 @@
     "name": "Mayor",
     "role": "Village Leader",
     "dialogue": "I founded this town after the Great Forgetting. We must protect its secrets.",
+    "conversation": {
+      "start": {
+        "npc": [
+          "Welcome, traveler.",
+          "The village depends on the right person making the right choice."
+        ],
+        "options": [
+          {"text": "Who are you?", "next": "who"},
+          {"text": "What do you need?", "next": "need"},
+          {"text": "Goodbye.", "next": "end"}
+        ]
+      },
+      "who": {
+        "npc": "I am the mayor. I try to keep everyone safe and the town moving forward.",
+        "options": [
+          {"text": "What do you need?", "next": "need"},
+          {"text": "Goodbye.", "next": "end"}
+        ]
+      },
+      "need": {
+        "npc": [
+          "The forest has grown strange, and our scouts have vanished.",
+          "If you can bring me the old map from the ruins, I will reward you." 
+        ],
+        "options": [
+          {"text": "I will find the map.", "next": "accept"},
+          {"text": "Not now.", "next": "end"}
+        ]
+      },
+      "accept": {
+        "npc": "Thank you. Return when you have news.",
+        "options": []
+      },
+      "end": {
+        "npc": "Take care, wanderer.",
+        "options": []
+      }
+    },
     "quest": {
       "id": "mayor_map",
       "title": "Find the Mayor's Lost Map"

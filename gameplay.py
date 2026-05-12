@@ -14,7 +14,8 @@ from game_logic import (
     normalize_direction,
     save_npcs,
     update_npc_definition,
-    create_npc_definition
+    create_npc_definition,
+    delete_npc_definition
 )
 import random, curses
 import sys
@@ -135,10 +136,108 @@ def main(stdscr, initial_save_code=None):
     def admin_help():
         show_msg(input_win, [
             "Admin commands:",
-            "admin login, admin logout, admin list npcs",
+            "admin login, admin logout, admin list npcs, admin list placements",
             "admin show npc <key>, admin edit npc <key>",
-            "admin create npc <key>, admin place npc <key> x y"
-        ], wait_ms=2600)
+            "admin create npc <key>, admin remove npc <key>",
+            "admin place npc <key> x y, admin unplace npc <key> x y"
+        ], wait_ms=3000)
+
+    def get_local_npc_keys():
+        loc = tuple(player_state["location"])
+        tile = world_map.get(loc, {})
+        return [npc for npc in tile.get("npcs", []) if isinstance(npc, str)]
+
+    def choose_option(prompt, options):
+        max_rows = input_h - 4
+        options = options[:max_rows]
+        while True:
+            input_win.clear()
+            input_win.box()
+            try:
+                input_win.addstr(1, 2, prompt)
+                for idx, option in enumerate(options, start=1):
+                    input_win.addstr(1 + idx, 2, f"{idx}. {option}")
+                input_win.addstr(2 + len(options), 2, "Choice: ")
+            except curses.error:
+                pass
+            input_win.refresh()
+            curses.echo()
+            try:
+                choice = input_win.getstr(3 + len(options), 2).decode("utf-8").strip()
+            except Exception:
+                choice = ""
+            finally:
+                curses.noecho()
+            if not choice:
+                return None
+            if choice.isdigit():
+                index = int(choice) - 1
+                if 0 <= index < len(options):
+                    return index
+            show_msg(input_win, ["Invalid choice. Try again."], wait_ms=900)
+
+    def run_npc_conversation(npc):
+        npc_flags = player_state.setdefault("npc_flags", {})
+        flags = npc_flags.setdefault(npc.name, {"met": False, "quest_accepted": False})
+        conversation = getattr(npc, "conversation", None)
+        if conversation and isinstance(conversation, dict):
+            node_key = "start"
+            while node_key:
+                node = conversation.get(node_key)
+                if not node:
+                    show_msg(input_win, ["This conversation branch is missing."], wait_ms=1200)
+                    break
+                npc_lines = node.get("npc", [])
+                if isinstance(npc_lines, str):
+                    npc_lines = [npc_lines]
+                for line in npc_lines:
+                    show_msg(input_win, [f"{npc.name}: {line}"], wait_ms=1200)
+                options = node.get("options", [])
+                if not options:
+                    break
+                option_texts = [opt.get("text", "") for opt in options]
+                selected = choose_option("Choose a reply:", option_texts)
+                if selected is None:
+                    break
+                next_key = options[selected].get("next")
+                if not next_key or next_key == "end":
+                    break
+                node_key = next_key
+        else:
+            if isinstance(npc.dialogue, list):
+                for line in npc.dialogue:
+                    show_msg(input_win, [f"{npc.name}: {line}"], wait_ms=1200)
+            else:
+                show_msg(input_win, [f"{npc.name}: {npc.dialogue}"], wait_ms=1800)
+        flags["met"] = True
+        if npc.quest and not flags.get("quest_accepted"):
+            answer = prompt_input(input_win, f"Accept quest '{npc.quest['title']}'? (y/n): ")
+            if answer.lower() == "y":
+                player_state["active_quest"] = npc.quest
+                flags["quest_accepted"] = True
+                show_msg(input_win, [f"Quest accepted: {npc.quest['title']}"], wait_ms=1400)
+            else:
+                show_msg(input_win, ["Quest declined."], wait_ms=900)
+
+    def talk_to_npc(key):
+        loc_npcs = get_local_npc_keys()
+        if key not in loc_npcs and key.lower() != "villager":
+            show_msg(input_win, [f"{key} is not here."], wait_ms=1400)
+            return
+        if key.lower() == "villager":
+            show_msg(input_win, [f"A villager whispers: \"{gossip_gen.get_gossip()}\""], wait_ms=1800)
+            return
+        npc = named_npcs.get(key)
+        if not npc:
+            show_msg(input_win, [f"No NPC with key: {key}"], wait_ms=1400)
+            return
+        run_npc_conversation(npc)
+
+    def location_npc_list_text():
+        keys = get_local_npc_keys()
+        if keys:
+            return ", ".join(keys)
+        return "none"
 
     # Find the first food in inventory that matches the templates.
     # Returns (index, inventory_name, template) or (None, None, None).
@@ -229,8 +328,23 @@ def main(stdscr, initial_save_code=None):
                 continue
 
             if tokens == ["admin", "list", "npcs"]:
-                keys = ", ".join(named_npcs.keys())
+                keys = ", ".join(named_npcs.keys()) or "(none)"
                 show_msg(input_win, ["NPC keys:", keys], wait_ms=2200)
+                continue
+
+            if tokens == ["admin", "list", "placements"]:
+                placements = []
+                for loc, tile in world_map.items():
+                    for npc_ref in tile.get("npcs", []):
+                        if isinstance(npc_ref, str):
+                            placements.append(f"{npc_ref}@{loc}")
+                if not placements:
+                    show_msg(input_win, ["No NPCs placed on the map."], wait_ms=1400)
+                else:
+                    lines = ["NPC placements:"] + placements[:5]
+                    if len(placements) > 5:
+                        lines.append(f"...and {len(placements) - 5} more")
+                    show_msg(input_win, lines, wait_ms=2600)
                 continue
 
             if len(tokens) >= 4 and tokens[1] == "show" and tokens[2] == "npc":
@@ -240,7 +354,9 @@ def main(stdscr, initial_save_code=None):
                     show_msg(input_win, [f"No NPC with key: {key}"], wait_ms=1400)
                     continue
                 quest_text = npc.quest["title"] if npc.quest else "None"
-                show_msg(input_win, [f"{npc.name} ({npc.role})", f"Dialogue: {npc.dialogue}", f"Quest: {quest_text}"], wait_ms=3200)
+                conv_flag = "yes" if getattr(npc, "conversation", None) else "no"
+                dialogue_text = npc.dialogue if isinstance(npc.dialogue, str) else "[list dialogue]"
+                show_msg(input_win, [f"{npc.name} ({npc.role})", f"Dialogue: {dialogue_text}", f"Quest: {quest_text}", f"Has conversation: {conv_flag}"], wait_ms=3400)
                 continue
 
             if len(tokens) >= 4 and tokens[1] == "edit" and tokens[2] == "npc":
@@ -252,11 +368,18 @@ def main(stdscr, initial_save_code=None):
                 if not npc:
                     show_msg(input_win, [f"No NPC with key: {key}"], wait_ms=1400)
                     continue
-                field = prompt_input(input_win, "Field to edit (name/role/dialogue/quest): ")
+                field = prompt_input(input_win, "Field to edit (name/role/dialogue/quest/conversation): ")
                 if field == "quest":
                     quest_id = prompt_input(input_win, "Quest id: ")
                     quest_title = prompt_input(input_win, "Quest title: ")
                     updated = update_npc_definition(key, {"quest": {"id": quest_id, "title": quest_title}})
+                elif field == "conversation":
+                    conv_json = prompt_input(input_win, "Enter conversation JSON: ")
+                    try:
+                        conversation = __import__("json").loads(conv_json)
+                        updated = update_npc_definition(key, {"conversation": conversation})
+                    except Exception:
+                        updated = False
                 else:
                     new_value = prompt_input(input_win, f"New {field}: ")
                     updated = update_npc_definition(key, {field: new_value})
@@ -264,6 +387,20 @@ def main(stdscr, initial_save_code=None):
                     show_msg(input_win, [f"NPC {key} updated."], wait_ms=1200)
                 else:
                     show_msg(input_win, ["Failed to update NPC."], wait_ms=1200)
+                continue
+
+            if len(tokens) >= 4 and tokens[1] == "remove" and tokens[2] == "npc":
+                if not player_state.get("admin"):
+                    show_msg(input_win, ["Admin required."], wait_ms=1200)
+                    continue
+                key = tokens[3]
+                if delete_npc_definition(key):
+                    for tile in world_map.values():
+                        if key in tile.get("npcs", []):
+                            tile["npcs"].remove(key)
+                    show_msg(input_win, [f"NPC removed: {key}"], wait_ms=1200)
+                else:
+                    show_msg(input_win, [f"No NPC with key: {key}"], wait_ms=1400)
                 continue
 
             if len(tokens) >= 4 and tokens[1] == "create" and tokens[2] == "npc":
@@ -278,12 +415,18 @@ def main(stdscr, initial_save_code=None):
                 role = prompt_input(input_win, "NPC role: ")
                 dialogue = prompt_input(input_win, "NPC dialogue: ")
                 quest_id = prompt_input(input_win, "Quest id (blank to skip): ")
-                quest_title = ""
                 quest = None
                 if quest_id:
                     quest_title = prompt_input(input_win, "Quest title: ")
                     quest = {"id": quest_id, "title": quest_title}
-                created = create_npc_definition(key, {"name": name, "role": role, "dialogue": dialogue, "quest": quest})
+                conv = None
+                if prompt_input(input_win, "Add conversation JSON? (y/n): ").lower() == "y":
+                    conv_json = prompt_input(input_win, "Enter conversation JSON: ")
+                    try:
+                        conv = __import__("json").loads(conv_json)
+                    except Exception:
+                        conv = None
+                created = create_npc_definition(key, {"name": name, "role": role, "dialogue": dialogue, "quest": quest, "conversation": conv})
                 if created:
                     show_msg(input_win, [f"NPC created: {key}"], wait_ms=1200)
                 else:
@@ -315,12 +458,49 @@ def main(stdscr, initial_save_code=None):
                 show_msg(input_win, [f"Placed {key} at {loc}."], wait_ms=1200)
                 continue
 
+            if len(tokens) >= 6 and tokens[1] == "unplace" and tokens[2] == "npc":
+                if not player_state.get("admin"):
+                    show_msg(input_win, ["Admin required."], wait_ms=1200)
+                    continue
+                key = tokens[3]
+                x = tokens[4]
+                y = tokens[5]
+                try:
+                    loc = (int(x), int(y))
+                except ValueError:
+                    show_msg(input_win, ["Coordinates must be numbers."], wait_ms=1400)
+                    continue
+                tile = world_map.get(loc)
+                if tile is None or key not in tile.get("npcs", []):
+                    show_msg(input_win, ["NPC not placed there."], wait_ms=1400)
+                    continue
+                tile["npcs"].remove(key)
+                show_msg(input_win, [f"Removed {key} from {loc}."], wait_ms=1200)
+                continue
+
             if tokens == ["admin", "help"]:
                 admin_help()
                 continue
 
             show_msg(input_win, ["Unknown admin command."], wait_ms=1200)
             continue
+
+        if command.startswith("talk"):
+            tokens = command.split()
+            if len(tokens) == 1:
+                local_npcs = get_local_npc_keys()
+                if not local_npcs:
+                    show_msg(input_win, ["There is no one here to talk to."], wait_ms=1400)
+                elif len(local_npcs) == 1:
+                    talk_to_npc(local_npcs[0])
+                else:
+                    choice = choose_option("Who do you want to talk to?", local_npcs)
+                    if choice is not None:
+                        talk_to_npc(local_npcs[choice])
+                continue
+            if len(tokens) >= 2:
+                talk_to_npc(tokens[1])
+                continue
 
         if command in ["north", "south", "east", "west"]:
             (x, y) = player_state["location"]
@@ -432,7 +612,7 @@ def main(stdscr, initial_save_code=None):
                 show_msg(input_win, ["Quit cancelled."], wait_ms=900)
 
         elif command == "help":
-            show_msg(input_win, ["Commands: north, south, east, west, inventory, save, help, quit", "Type 'admin' for admin commands if authorized."], wait_ms=1800)
+            show_msg(input_win, ["Commands: north, south, east, west, talk, inventory, save, help, quit", "Type 'admin' for admin commands if authorized."], wait_ms=2200)
 
         elif command == "status":
             effects = player_state.get("status_effects", [])

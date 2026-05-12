@@ -40,7 +40,8 @@ def _create_npc_from_spec(key, spec):
         name=spec.get("name", key.title()),
         role=spec.get("role", "Wanderer"),
         dialogue=spec.get("dialogue", "Hello."),
-        quest=spec.get("quest")
+        quest=spec.get("quest"),
+        conversation=spec.get("conversation")
     )
 
 
@@ -114,7 +115,11 @@ def update_npc_definition(key, updates):
     if key not in npc_definitions:
         return False
     npc_definitions[key].update(updates)
-    named_npcs[key] = _create_npc_from_spec(key, npc_definitions[key])
+    old_npc = named_npcs.get(key)
+    new_npc = _create_npc_from_spec(key, npc_definitions[key])
+    if old_npc:
+        new_npc.met = old_npc.met
+    named_npcs[key] = new_npc
     _save_npc_definitions()
     return True
 
@@ -125,6 +130,16 @@ def create_npc_definition(key, data):
         return False
     npc_definitions[key] = data
     named_npcs[key] = _create_npc_from_spec(key, data)
+    _save_npc_definitions()
+    return True
+
+
+def delete_npc_definition(key):
+    global npc_definitions
+    if key not in npc_definitions:
+        return False
+    del npc_definitions[key]
+    named_npcs.pop(key, None)
     _save_npc_definitions()
     return True
 
@@ -144,11 +159,12 @@ def render_char(win, player_state, named_npcs, gossip_gen):
     win.refresh()
 
 class NPC:
-    def __init__(self, name, role, dialogue, quest=None):
+    def __init__(self, name, role, dialogue, quest=None, conversation=None):
         self.name = name
         self.role = role
         self.dialogue = dialogue
         self.quest = quest
+        self.conversation = conversation
         self.met = False
 
     def interact(self, player_state):
