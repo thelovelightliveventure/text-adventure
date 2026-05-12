@@ -265,12 +265,20 @@ def main(stdscr, initial_save_code=None):
             show_msg(input_win, ["Your save code:", code], wait_ms=2800)
 
         elif command == "quit":
-            input_win.clear()
-            input_win.box()
-            input_win.addstr(1, 2, "Thanks for playing!")
+            input_win.addstr(1, 2, "Are you sure you want to quit? (y/n) ")
             input_win.refresh()
-            curses.napms(1500)
-            break
+            curses.echo()
+            confirm = input_win.getstr(2, 2).decode("utf-8").strip().lower()
+            curses.noecho()
+            if confirm == "y":
+                input_win.clear()
+                input_win.box()
+                input_win.addstr(1, 2, "Thanks for playing!")
+                input_win.refresh()
+                curses.napms(1500)
+                break
+            else:
+                show_msg(input_win, ["Quit cancelled."], wait_ms=900)
 
         elif command == "help":
             show_msg(input_win, ["Commands: north, south, east, west, inventory, save, help, quit"], wait_ms=1500)

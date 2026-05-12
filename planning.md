@@ -2,10 +2,10 @@
 -----------WHILE CODING----------
 ---------------------------------
 Self-notes (notes for coding):
-- Adapt to curses
+- 
 
 To develop:
-- CONSOLE: Make a help menu for commands and expand menu (kill, hunt, loot, examine, n\up=north etc)
+- CONSOLE: Make a help menu for commands and expand menu (kill, hunt, loot, examine, befriend animal)
 - CHARACTERS: Make a way for NPCs with backstories to interact with users.
 - COMBAT: add weapons and armor to reduce damage, add creature loot tables, add hunt
 - CREATURES: make animals stay near where they spawned for consistency
@@ -17,6 +17,7 @@ To develop:
 - CONSOLE: kill will always try to find someone, otherwise "there is nothing nearby to kill"
 - change cure and infirmary health bar effects
 - User needs to customize name
+- COMPLETE OVERWRITE: User customizes user type
 
 Current bugs:
 - the characters gossip overwrites boundary lines
@@ -59,8 +60,7 @@ Guard Captain - MacKaw MacOw:
     - Suspicious of everyone and also, hates explorers.
     - Constantly training new recruits that don't exist.
     - Secretly afraid of chickens.
-    - SIDE QUEST: You'll get Guard points (he'll like you a little more) if you solve
-        mysteries for him.
+    - SIDE QUEST: You'll get Guard points (he'll like you a little more) if you solve mysteries for him.
 
 Gossipy neighbor - Mira Willow:
     - Knows everything, tells everyone.
@@ -81,7 +81,7 @@ The Blacksmith:
 SIDE CHARACTERS:
 The Mysterious Traveler - "The Stranger"
     - Keeps showing up in random places.
-    - Never gives a real name.
+    - Always gives a different name.
     - Maybe helping you? Maybe spying on you?
     - PLOT: If you save him, he'll level up your sword.
 
@@ -100,8 +100,7 @@ The Librarian - Miss Dovetail:
     - Sweet, ancient, and maybe immortal?
     - The library reorganizes itself after closing.
     - She insists books "choose their readers."
-    - PLOT: if you correctly answer her book trivia questions, you'll get her 
-    "book of ancient wisdom."
+    - PLOT: if you correctly answer her book trivia questions, you'll get her "book of ancient wisdom."
 
 The Talking Crow:
     - Vastly annoying, delivers gossip
