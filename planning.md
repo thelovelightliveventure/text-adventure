@@ -21,7 +21,10 @@ To develop:
 
 Current bugs:
 - the characters gossip overwrites boundary lines
-
+- exclamation mark in input box
+- arrows are currently useless
+- hard to know where the user is right now until you spot the x
+- hunger bar flashes but disappears when poisoned
 
 ---------------------------------
 ---------CODE PLANNING-----------

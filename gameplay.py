@@ -133,14 +133,27 @@ def main(stdscr, initial_save_code=None):
             curses.noecho()
         return value
 
+    # Admin commands menu
     def admin_help():
-        show_msg(input_win, [
+        input_win.clear()
+        input_win.box()
+        help_lines = [
             "Admin commands:",
             "admin login, admin logout, admin list npcs, admin list placements",
             "admin show npc <key>, admin edit npc <key>",
             "admin create npc <key>, admin remove npc <key>",
-            "admin place npc <key> x y, admin unplace npc <key> x y"
-        ], wait_ms=3000)
+            "admin place npc <key> x y, admin unplace npc <key> x y",
+            "Press any key to continue..."
+        ]
+        for i, ln in enumerate(help_lines, start=1):
+            try:
+                input_win.addstr(i, 2, ln)
+            except curses.error:
+                pass
+        input_win.refresh()
+        curses.noecho()
+        input_win.getch()
+        curses.noecho()
 
     def get_local_npc_keys():
         loc = tuple(player_state["location"])
@@ -307,9 +320,10 @@ def main(stdscr, initial_save_code=None):
 
         command = normalize_direction(command) or command
         
+        # Admin command handling (must start with "admin")
         if command.startswith("admin"):
             tokens = command.split()
-            if command == "admin":
+            if command == "admin" and player_state["admin"] == True:
                 admin_help()
                 continue
 
@@ -411,26 +425,81 @@ def main(stdscr, initial_save_code=None):
                 if key in named_npcs:
                     show_msg(input_win, [f"NPC key already exists: {key}"], wait_ms=1400)
                     continue
-                name = prompt_input(input_win, "NPC name: ")
-                role = prompt_input(input_win, "NPC role: ")
-                dialogue = prompt_input(input_win, "NPC dialogue: ")
-                quest_id = prompt_input(input_win, "Quest id (blank to skip): ")
-                quest = None
-                if quest_id:
-                    quest_title = prompt_input(input_win, "Quest title: ")
-                    quest = {"id": quest_id, "title": quest_title}
-                conv = None
-                if prompt_input(input_win, "Add conversation JSON? (y/n): ").lower() == "y":
-                    conv_json = prompt_input(input_win, "Enter conversation JSON: ")
+
+                # Collect NPC data with editing capability
+                npc_data = {
+                    "name": "",
+                    "role": "",
+                    "dialogue": "",
+                    "quest": None,
+                    "conversation": None
+                }
+
+                while True:
+                    # Display current data
+                    input_win.clear()
+                    input_win.box()
+                    lines = [
+                        f"Creating NPC: {key}",
+                        f"1. Name: {npc_data['name'] or '(blank)'}",
+                        f"2. Role: {npc_data['role'] or '(blank)'}",
+                        f"3. Dialogue: {npc_data['dialogue'] or '(blank)'}",
+                        f"4. Quest: {npc_data['quest']['title'] if npc_data['quest'] else '(none)'}",
+                        f"5. Conversation: {'yes' if npc_data['conversation'] else 'no'}",
+                        "",
+                        "Choose: 1-5 to edit, 'create' to save, 'cancel' to abort"
+                    ]
+                    for i, ln in enumerate(lines, start=1):
+                        try:
+                            input_win.addstr(i, 2, ln)
+                        except curses.error:
+                            pass
+                    input_win.refresh()
+                    curses.echo()
                     try:
-                        conv = __import__("json").loads(conv_json)
+                        choice = input_win.getstr(len(lines) + 1, 2).decode("utf-8").strip().lower()
                     except Exception:
-                        conv = None
-                created = create_npc_definition(key, {"name": name, "role": role, "dialogue": dialogue, "quest": quest, "conversation": conv})
-                if created:
-                    show_msg(input_win, [f"NPC created: {key}"], wait_ms=1200)
-                else:
-                    show_msg(input_win, ["Failed to create NPC."], wait_ms=1200)
+                        choice = ""
+                    finally:
+                        curses.noecho()
+
+                    if choice == "cancel":
+                        show_msg(input_win, ["NPC creation cancelled."], wait_ms=1200)
+                        break
+                    elif choice == "create":
+                        if not npc_data["name"] or not npc_data["role"]:
+                            show_msg(input_win, ["Name and role are required."], wait_ms=1200)
+                            continue
+                        created = create_npc_definition(key, npc_data)
+                        if created:
+                            show_msg(input_win, [f"NPC created: {key}"], wait_ms=1200)
+                        else:
+                            show_msg(input_win, ["Failed to create NPC."], wait_ms=1200)
+                        break
+                    elif choice == "1":
+                        npc_data["name"] = prompt_input(input_win, "NPC name: ")
+                    elif choice == "2":
+                        npc_data["role"] = prompt_input(input_win, "NPC role: ")
+                    elif choice == "3":
+                        npc_data["dialogue"] = prompt_input(input_win, "NPC dialogue: ")
+                    elif choice == "4":
+                        quest_id = prompt_input(input_win, "Quest id (blank to remove): ")
+                        if quest_id:
+                            quest_title = prompt_input(input_win, "Quest title: ")
+                            npc_data["quest"] = {"id": quest_id, "title": quest_title}
+                        else:
+                            npc_data["quest"] = None
+                    elif choice == "5":
+                        if prompt_input(input_win, "Add conversation JSON? (y/n): ").lower() == "y":
+                            conv_json = prompt_input(input_win, "Enter conversation JSON: ")
+                            try:
+                                npc_data["conversation"] = __import__("json").loads(conv_json)
+                            except Exception:
+                                show_msg(input_win, ["Invalid JSON, conversation not set."], wait_ms=1200)
+                        else:
+                            npc_data["conversation"] = None
+                    else:
+                        show_msg(input_win, ["Invalid choice."], wait_ms=900)
                 continue
 
             if len(tokens) >= 6 and tokens[1] == "place" and tokens[2] == "npc":
@@ -482,7 +551,7 @@ def main(stdscr, initial_save_code=None):
                 admin_help()
                 continue
 
-            show_msg(input_win, ["Unknown admin command."], wait_ms=1200)
+            show_msg(input_win, ["Unknown command."], wait_ms=1200)
             continue
 
         if command.startswith("talk"):
@@ -509,10 +578,10 @@ def main(stdscr, initial_save_code=None):
             # If "doors" is absent (outdoor/open tiles), allow movement freely.
             doors = current_tile.get("doors", None)
             if (doors is None) or (command in doors):
-                if command == "north": y -= 1
-                elif command == "south": y += 1
-                elif command == "east": x += 1
-                elif command == "west": x -= 1
+                if command in "north": y -= 1
+                elif command in "south": y += 1
+                elif command in "east": x += 1
+                elif command in "west": x -= 1
                 player_state["location"] = [x, y]
                 if (x, y) not in player_state["explored"]:
                     player_state["explored"].append((x, y))
@@ -612,7 +681,7 @@ def main(stdscr, initial_save_code=None):
                 show_msg(input_win, ["Quit cancelled."], wait_ms=900)
 
         elif command == "help":
-            show_msg(input_win, ["Commands: north, south, east, west, talk, inventory, save, help, quit", "Type 'admin' for admin commands if authorized."], wait_ms=2200)
+            show_msg(input_win, ["Commands: north, south, east, west, talk, inventory, save, help, quit"], wait_ms=2200)
 
         elif command == "status":
             effects = player_state.get("status_effects", [])

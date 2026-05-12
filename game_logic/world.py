@@ -180,7 +180,7 @@ def describe_location(location, gossip_gen, player_state):
 def normalize_direction(command):
     command = command.lower().strip()
 
-    north_aliases = ["n", "go north", "move north", "up", "u", "w", "key_up", "↑", "move up", "go up"]
+    north_aliases = ["n", "go north", "move north", "up", "u", "key_up", "↑", "move up", "go up"]
     south_aliases = ["s", "go south", "move south", "down", "d", "s", "key_down", "↓", "move down", "go down"]
     east_aliases = ["e", "go east", "move east", "right", "r", "d", "key_right", "→", "move right", "go right"]
     west_aliases = ["w", "go west", "move west", "left", "l", "a", "key_left", "←", "move left", "go left"]
