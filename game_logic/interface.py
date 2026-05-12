@@ -46,6 +46,7 @@ def render_info(win, player_state):
         win.addstr(4, 2, f"Status: {', '.join(effects)}")
 
     win.addstr(5, 2, f"Inventory: {', '.join(inventory)}")
+    win.addstr(6, 2, f"Quests: {player_state.get('active_quest', {}).get('title', 'None')}")
     win.refresh()
     
 def get_command(win):

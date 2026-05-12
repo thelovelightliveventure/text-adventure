@@ -101,7 +101,8 @@ def main(stdscr, initial_save_code=None):
 
     # Helper to show a brief message without forcing an extra keypress.
     # Use wait_ms to control how long the message stays visible (milliseconds).
-    def show_msg(win, lines, wait_ms=1200):
+    # If wait_for_key is True, wait for user to press any key instead.
+    def show_msg(win, lines, wait_ms=1200, wait_for_key=False):
         win.clear()
         win.box()
         for i, ln in enumerate(lines, start=1):
@@ -111,7 +112,12 @@ def main(stdscr, initial_save_code=None):
                 # ignore if window too small
                 pass
         win.refresh()
-        curses.napms(wait_ms)
+        if wait_for_key:
+            curses.noecho()
+            win.getch()
+            curses.noecho()
+        else:
+            curses.napms(wait_ms)
 
     def prompt_input(win, prompt, hide=False):
         win.clear()
@@ -204,7 +210,7 @@ def main(stdscr, initial_save_code=None):
                 if isinstance(npc_lines, str):
                     npc_lines = [npc_lines]
                 for line in npc_lines:
-                    show_msg(input_win, [f"{npc.name}: {line}"], wait_ms=1200)
+                    show_msg(input_win, [f"{npc.name}: {line}"], wait_for_key=True)
                 options = node.get("options", [])
                 if not options:
                     break
@@ -212,7 +218,13 @@ def main(stdscr, initial_save_code=None):
                 selected = choose_option("Choose a reply:", option_texts)
                 if selected is None:
                     break
-                next_key = options[selected].get("next")
+                chosen_option = options[selected]
+                action = chosen_option.get("action")
+                if action == "accept_quest" and npc.quest and not flags.get("quest_accepted"):
+                    player_state["active_quest"] = npc.quest
+                    flags["quest_accepted"] = True
+                    show_msg(input_win, [f"Quest accepted: {npc.quest['title']}"], wait_for_key=True)
+                next_key = chosen_option.get("next")
                 if not next_key or next_key == "end":
                     break
                 node_key = next_key
@@ -221,7 +233,7 @@ def main(stdscr, initial_save_code=None):
                 for line in npc.dialogue:
                     show_msg(input_win, [f"{npc.name}: {line}"], wait_ms=1200)
             else:
-                show_msg(input_win, [f"{npc.name}: {npc.dialogue}"], wait_ms=1800)
+                show_msg(input_win, [f"{npc.name}: {npc.dialogue}"], wait_for_key=True)
         flags["met"] = True
         if npc.quest and not flags.get("quest_accepted"):
             answer = prompt_input(input_win, f"Accept quest '{npc.quest['title']}'? (y/n): ")
@@ -457,7 +469,7 @@ def main(stdscr, initial_save_code=None):
                     input_win.refresh()
                     curses.echo()
                     try:
-                        choice = input_win.getstr(len(lines) + 1, 2).decode("utf-8").strip().lower()
+                        choice = input_win.getstr(len(lines), 2).decode("utf-8").strip().lower()
                     except Exception:
                         choice = ""
                     finally:

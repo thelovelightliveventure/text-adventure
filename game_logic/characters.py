@@ -51,7 +51,7 @@ def _default_npc_definitions():
             "name": "Mayor",
             "role": "Village Leader",
             "dialogue": "I founded this town after the Great Forgetting. We must protect its secrets.",
-            "quest": {"id": "mayor_map", "title": "Find the Mayor's Lost Map"}
+            "quest": {"id": "mayor_map", "title": "Mayor's Lost Map"}
         },
         "blacksmith": {
             "name": "Blacksmith",
