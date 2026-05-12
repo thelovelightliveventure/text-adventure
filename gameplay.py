@@ -198,7 +198,18 @@ def main(stdscr, initial_save_code=None):
     def run_npc_conversation(npc):
         npc_flags = player_state.setdefault("npc_flags", {})
         flags = npc_flags.setdefault(npc.name, {"met": False, "quest_accepted": False})
-        conversation = getattr(npc, "conversation", None)
+        # Special handling if quest accepted
+        if flags.get("quest_accepted") and npc.quest:
+            required_item = npc.quest.get("required_item")
+            # Check for quest completion
+            if required_item and required_item in player_state.get("inventory", []) and hasattr(npc, "quest_complete_conversation"):
+                conversation = getattr(npc, "quest_complete_conversation")
+            else:
+                post_msg = getattr(npc, "post_quest_message", f"{npc.name}: You already have my quest. Go complete it!")
+                show_msg(input_win, [post_msg], wait_for_key=True)
+                return
+        else:
+            conversation = getattr(npc, "conversation", None)
         if conversation and isinstance(conversation, dict):
             node_key = "start"
             while node_key:
@@ -206,6 +217,9 @@ def main(stdscr, initial_save_code=None):
                 if not node:
                     show_msg(input_win, ["This conversation branch is missing."], wait_ms=1200)
                     break
+                # Unlock quest if node offers it
+                if node.get("offers_quest"):
+                    flags["quest_unlocked"] = True
                 npc_lines = node.get("npc", [])
                 if isinstance(npc_lines, str):
                     npc_lines = [npc_lines]
@@ -224,6 +238,17 @@ def main(stdscr, initial_save_code=None):
                     player_state["active_quest"] = npc.quest
                     flags["quest_accepted"] = True
                     show_msg(input_win, [f"Quest accepted: {npc.quest['title']}"], wait_for_key=True)
+                elif action == "complete_quest":
+                    required_item = npc.quest.get("required_item")
+                    reward_item = npc.quest.get("reward_item", "reward")
+                    if required_item in player_state.get("inventory", []):
+                        player_state["inventory"].remove(required_item)
+                    player_state["inventory"].append(reward_item)
+                    player_state.setdefault("quests_completed", []).append(npc.quest["id"])
+                    if "active_quest" in player_state:
+                        del player_state["active_quest"]
+                    flags["quest_completed"] = True
+                    show_msg(input_win, ["Quest completed!"], wait_for_key=True)
                 next_key = chosen_option.get("next")
                 if not next_key or next_key == "end":
                     break
@@ -231,18 +256,31 @@ def main(stdscr, initial_save_code=None):
         else:
             if isinstance(npc.dialogue, list):
                 for line in npc.dialogue:
-                    show_msg(input_win, [f"{npc.name}: {line}"], wait_ms=1200)
+                    show_msg(input_win, [f"{npc.name}: {line}"], wait_for_key=True)
             else:
                 show_msg(input_win, [f"{npc.name}: {npc.dialogue}"], wait_for_key=True)
         flags["met"] = True
+        # Quest prompt logic
         if npc.quest and not flags.get("quest_accepted"):
-            answer = prompt_input(input_win, f"Accept quest '{npc.quest['title']}'? (y/n): ")
-            if answer.lower() == "y":
-                player_state["active_quest"] = npc.quest
-                flags["quest_accepted"] = True
-                show_msg(input_win, [f"Quest accepted: {npc.quest['title']}"], wait_ms=1400)
+            if conversation:
+                # For NPCs with conversation, only prompt if quest is unlocked
+                if flags.get("quest_unlocked", False):
+                    answer = prompt_input(input_win, f"Accept quest '{npc.quest['title']}'? (y/n): ")
+                    if answer.lower() == "y":
+                        player_state["active_quest"] = npc.quest
+                        flags["quest_accepted"] = True
+                        show_msg(input_win, [f"Quest accepted: {npc.quest['title']}"], wait_for_key=True)
+                    else:
+                        show_msg(input_win, ["Quest declined."], wait_for_key=True)
             else:
-                show_msg(input_win, ["Quest declined."], wait_ms=900)
+                # For NPCs without conversation, always prompt after dialogue
+                answer = prompt_input(input_win, f"Accept quest '{npc.quest['title']}'? (y/n): ")
+                if answer.lower() == "y":
+                    player_state["active_quest"] = npc.quest
+                    flags["quest_accepted"] = True
+                    show_msg(input_win, [f"Quest accepted: {npc.quest['title']}"], wait_for_key=True)
+                else:
+                    show_msg(input_win, ["Quest declined."], wait_for_key=True)
 
     def talk_to_npc(key):
         loc_npcs = get_local_npc_keys()

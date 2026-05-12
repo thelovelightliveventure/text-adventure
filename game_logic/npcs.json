@@ -3,6 +3,25 @@
     "name": "Mayor",
     "role": "Village Leader",
     "dialogue": "I founded this town after the Great Forgetting. We must protect its secrets.",
+    "post_quest_message": "Mayor: Why are you still here? Get me my map!",
+    "quest_complete_conversation": {
+      "start": {
+        "npc": [
+          "Ah, you have the map!",
+          "Let me see it."
+        ],
+        "options": [
+          {"text": "Here it is.", "next": "complete", "action": "complete_quest"}
+        ]
+      },
+      "complete": {
+        "npc": [
+          "Perfect! This will help us greatly.",
+          "As a reward, take this enchanted amulet."
+        ],
+        "options": []
+      }
+    },
     "conversation": {
       "start": {
         "npc": [
@@ -33,6 +52,7 @@
         ]
       },
       "accept": {
+        "offers_quest": true,
         "npc": "Thank you. Return when you have news.",
         "options": []
       },
@@ -43,7 +63,9 @@
     },
     "quest": {
       "id": "mayor_map",
-      "title": "Find the Mayor's Lost Map"
+      "title": "Mayor's Lost Map",
+      "required_item": "old map",
+      "reward_item": "enchanted amulet"
     }
   },
   "blacksmith": {
