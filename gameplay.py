@@ -11,10 +11,15 @@ from game_logic import (
     engage_combat,
     food,
     render_char,
-    normalize_direction
+    normalize_direction,
+    save_npcs,
+    update_npc_definition,
+    create_npc_definition
 )
 import random, curses
 import sys
+
+ADMIN_PASSWORD = "admin123"
 
 def main(stdscr, initial_save_code=None):
     curses.curs_set(0) # Hide cursor
@@ -74,7 +79,8 @@ def main(stdscr, initial_save_code=None):
         "status_effects": [],  # list of active effect names, e.g. ["Poisoned"]
         "food": 100,
         "health": 100,
-        "npc_flags": {}     # e.g., {"Blacksmith": {"met": True, "quest_accepted": True}}
+        "npc_flags": {},     # e.g., {"Blacksmith": {"met": True, "quest_accepted": True}}
+        "admin": False
     }
 
     # Initialize player_state from provided save code (if any)
@@ -82,6 +88,7 @@ def main(stdscr, initial_save_code=None):
         player_state = load_from_code(initial_save_code) or default_state
     else:
         player_state = default_state
+    player_state.setdefault("admin", False)
 
     # Ensure starting position is marked explored so player marker shows immediately
     start_loc = tuple(player_state.get("location", [0, 0]))
@@ -104,6 +111,34 @@ def main(stdscr, initial_save_code=None):
                 pass
         win.refresh()
         curses.napms(wait_ms)
+
+    def prompt_input(win, prompt, hide=False):
+        win.clear()
+        win.box()
+        try:
+            win.addstr(1, 2, prompt)
+        except curses.error:
+            pass
+        win.refresh()
+        if hide:
+            curses.noecho()
+        else:
+            curses.echo()
+        try:
+            value = win.getstr(2, 2).decode("utf-8").strip()
+        except Exception:
+            value = ""
+        finally:
+            curses.noecho()
+        return value
+
+    def admin_help():
+        show_msg(input_win, [
+            "Admin commands:",
+            "admin login, admin logout, admin list npcs",
+            "admin show npc <key>, admin edit npc <key>",
+            "admin create npc <key>, admin place npc <key> x y"
+        ], wait_ms=2600)
 
     # Find the first food in inventory that matches the templates.
     # Returns (index, inventory_name, template) or (None, None, None).
@@ -173,6 +208,120 @@ def main(stdscr, initial_save_code=None):
 
         command = normalize_direction(command) or command
         
+        if command.startswith("admin"):
+            tokens = command.split()
+            if command == "admin":
+                admin_help()
+                continue
+
+            if tokens == ["admin", "login"]:
+                password = prompt_input(input_win, "Admin password: ", hide=True)
+                if password == ADMIN_PASSWORD:
+                    player_state["admin"] = True
+                    show_msg(input_win, ["Admin mode enabled."], wait_ms=1200)
+                else:
+                    show_msg(input_win, ["Wrong admin password."], wait_ms=1200)
+                continue
+
+            if tokens == ["admin", "logout"]:
+                player_state["admin"] = False
+                show_msg(input_win, ["Admin mode disabled."], wait_ms=1200)
+                continue
+
+            if tokens == ["admin", "list", "npcs"]:
+                keys = ", ".join(named_npcs.keys())
+                show_msg(input_win, ["NPC keys:", keys], wait_ms=2200)
+                continue
+
+            if len(tokens) >= 4 and tokens[1] == "show" and tokens[2] == "npc":
+                key = tokens[3]
+                npc = named_npcs.get(key)
+                if not npc:
+                    show_msg(input_win, [f"No NPC with key: {key}"], wait_ms=1400)
+                    continue
+                quest_text = npc.quest["title"] if npc.quest else "None"
+                show_msg(input_win, [f"{npc.name} ({npc.role})", f"Dialogue: {npc.dialogue}", f"Quest: {quest_text}"], wait_ms=3200)
+                continue
+
+            if len(tokens) >= 4 and tokens[1] == "edit" and tokens[2] == "npc":
+                if not player_state.get("admin"):
+                    show_msg(input_win, ["Admin required."], wait_ms=1200)
+                    continue
+                key = tokens[3]
+                npc = named_npcs.get(key)
+                if not npc:
+                    show_msg(input_win, [f"No NPC with key: {key}"], wait_ms=1400)
+                    continue
+                field = prompt_input(input_win, "Field to edit (name/role/dialogue/quest): ")
+                if field == "quest":
+                    quest_id = prompt_input(input_win, "Quest id: ")
+                    quest_title = prompt_input(input_win, "Quest title: ")
+                    updated = update_npc_definition(key, {"quest": {"id": quest_id, "title": quest_title}})
+                else:
+                    new_value = prompt_input(input_win, f"New {field}: ")
+                    updated = update_npc_definition(key, {field: new_value})
+                if updated:
+                    show_msg(input_win, [f"NPC {key} updated."], wait_ms=1200)
+                else:
+                    show_msg(input_win, ["Failed to update NPC."], wait_ms=1200)
+                continue
+
+            if len(tokens) >= 4 and tokens[1] == "create" and tokens[2] == "npc":
+                if not player_state.get("admin"):
+                    show_msg(input_win, ["Admin required."], wait_ms=1200)
+                    continue
+                key = tokens[3]
+                if key in named_npcs:
+                    show_msg(input_win, [f"NPC key already exists: {key}"], wait_ms=1400)
+                    continue
+                name = prompt_input(input_win, "NPC name: ")
+                role = prompt_input(input_win, "NPC role: ")
+                dialogue = prompt_input(input_win, "NPC dialogue: ")
+                quest_id = prompt_input(input_win, "Quest id (blank to skip): ")
+                quest_title = ""
+                quest = None
+                if quest_id:
+                    quest_title = prompt_input(input_win, "Quest title: ")
+                    quest = {"id": quest_id, "title": quest_title}
+                created = create_npc_definition(key, {"name": name, "role": role, "dialogue": dialogue, "quest": quest})
+                if created:
+                    show_msg(input_win, [f"NPC created: {key}"], wait_ms=1200)
+                else:
+                    show_msg(input_win, ["Failed to create NPC."], wait_ms=1200)
+                continue
+
+            if len(tokens) >= 6 and tokens[1] == "place" and tokens[2] == "npc":
+                if not player_state.get("admin"):
+                    show_msg(input_win, ["Admin required."], wait_ms=1200)
+                    continue
+                key = tokens[3]
+                x = tokens[4]
+                y = tokens[5]
+                if key not in named_npcs:
+                    show_msg(input_win, [f"No NPC with key: {key}"], wait_ms=1400)
+                    continue
+                try:
+                    loc = (int(x), int(y))
+                except ValueError:
+                    show_msg(input_win, ["Coordinates must be numbers."], wait_ms=1400)
+                    continue
+                tile = world_map.get(loc)
+                if tile is None:
+                    show_msg(input_win, ["No such location on the map."], wait_ms=1400)
+                    continue
+                tile.setdefault("npcs", [])
+                if key not in tile["npcs"]:
+                    tile["npcs"].append(key)
+                show_msg(input_win, [f"Placed {key} at {loc}."], wait_ms=1200)
+                continue
+
+            if tokens == ["admin", "help"]:
+                admin_help()
+                continue
+
+            show_msg(input_win, ["Unknown admin command."], wait_ms=1200)
+            continue
+
         if command in ["north", "south", "east", "west"]:
             (x, y) = player_state["location"]
             current_tile = world_map.get((x, y), {})
@@ -265,6 +414,8 @@ def main(stdscr, initial_save_code=None):
             show_msg(input_win, ["Your save code:", code], wait_ms=2800)
 
         elif command == "quit":
+            input_win.clear()
+            input_win.box()
             input_win.addstr(1, 2, "Are you sure you want to quit? (y/n) ")
             input_win.refresh()
             curses.echo()
@@ -281,7 +432,7 @@ def main(stdscr, initial_save_code=None):
                 show_msg(input_win, ["Quit cancelled."], wait_ms=900)
 
         elif command == "help":
-            show_msg(input_win, ["Commands: north, south, east, west, inventory, save, help, quit"], wait_ms=1500)
+            show_msg(input_win, ["Commands: north, south, east, west, inventory, save, help, quit", "Type 'admin' for admin commands if authorized."], wait_ms=1800)
 
         elif command == "status":
             effects = player_state.get("status_effects", [])

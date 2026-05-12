@@ -1,4 +1,4 @@
-from .characters import NPC, mayor, blacksmith, farmer, guard, child
+from .characters import NPC, named_npcs
 import curses
 
 ###################################
@@ -122,28 +122,28 @@ world_map[(5, 5)] = {
 }
 world_map[(5, 6)] = {
     "name": "North Street", 
-    "npcs": [child],
+    "npcs": ["child"],
     "doors": ["north", "south"]
 }
 world_map[(5, 7)] = {
     "name": "Mayor's House", 
     "features": ["Mayor's Map"], 
-    "npcs": [mayor],
+    "npcs": ["mayor"],
     "doors": ["south"]
 }
 world_map[(4, 5)] = {
     "name": "West Street", 
-    "npcs": [blacksmith],
+    "npcs": ["blacksmith"],
     "doors": ["east", "west"]
 }
 world_map[(6, 5)] = {
     "name": "East Street", 
-    "npcs": [farmer],
+    "npcs": ["farmer"],
     "doors": ["east", "west"]
 }
 world_map[(5, 4)] = {
     "name": "South Street", 
-    "npcs": [guard],
+    "npcs": ["guard"],
     "doors": ["north", "south"]
 }
 world_map[(5, 3)] = {
@@ -163,11 +163,17 @@ def describe_location(location, gossip_gen, player_state):
             print("You see:", ", ".join(data["features"]))
         if "npcs" in data:
             print("People nearby:")
-            for npc in data["npcs"]:
-                if isinstance(npc, str) and npc.lower() == "villager":
-                    print(f"- Villager whispers: \"{gossip_gen.get_gossip()}\"")
-                elif isinstance(npc, NPC):
-                    npc.interact(player_state)
+            for npc_ref in data["npcs"]:
+                if isinstance(npc_ref, str):
+                    if npc_ref.lower() == "villager":
+                        print(f"- Villager whispers: \"{gossip_gen.get_gossip()}\"")
+                    else:
+                        npc_key = npc_ref.lower()
+                        npc = named_npcs.get(npc_key)
+                        if npc:
+                            npc.interact(player_state)
+                        else:
+                            print(f"- Unknown NPC reference: {npc_ref}")
     else:
         print("You are in an unremarkable part of the forest.")
 

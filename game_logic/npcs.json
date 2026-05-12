@@ -1,0 +1,47 @@
+{
+  "mayor": {
+    "name": "Mayor",
+    "role": "Village Leader",
+    "dialogue": "I founded this town after the Great Forgetting. We must protect its secrets.",
+    "quest": {
+      "id": "mayor_map",
+      "title": "Find the Mayor's Lost Map"
+    }
+  },
+  "blacksmith": {
+    "name": "Blacksmith",
+    "role": "Craftsman",
+    "dialogue": "My hammer once broke a cursed sword. I need rare ore to forge a new one.",
+    "quest": {
+      "id": "blacksmith_ore",
+      "title": "Retrieve the Forgotten Ore"
+    }
+  },
+  "farmer": {
+    "name": "Farmer",
+    "role": "Crop Tender",
+    "dialogue": "The soil is cursed. I need enchanted seeds to restore the fields.",
+    "quest": {
+      "id": "farmer_seeds",
+      "title": "Find the Enchanted Seeds"
+    }
+  },
+  "guard": {
+    "name": "Guard",
+    "role": "Forest Watch",
+    "dialogue": "I patrol the forest edge every night. Something is watching us.",
+    "quest": {
+      "id": "guard_watch",
+      "title": "Investigate the Forest Shadows"
+    }
+  },
+  "child": {
+    "name": "Child",
+    "role": "Curious Kid",
+    "dialogue": "I saw something glowing near the bell tower. It whispered my name.",
+    "quest": {
+      "id": "child_glow",
+      "title": "Find the Glowing Whisper"
+    }
+  }
+}
