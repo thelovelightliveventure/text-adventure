@@ -68,6 +68,120 @@
       "reward_item": "enchanted amulet"
     }
   },
+"innkeeper": {
+    "name": "Innkeeper",
+    "role": "Town Host",
+    "dialogue": "Welcome to the INN, known for its mediocre rooms and the one and only deluxe room filled with every wonder and all the luxury known to mankind.",
+    "post_quest_message": "Innkeeper: Why are you still here? Get me my map!",
+    "quest_complete_conversation": {
+      "start": {
+        "npc": [
+          "Ah, you have the map!",
+          "Let me see it."
+        ],
+        "options": [
+          {"text": "Here it is.", "next": "complete", "action": "complete_quest"}
+        ]
+      },
+      "complete": {
+        "npc": [
+          "Perfect! This will help us greatly.",
+          "As a reward, take this enchanted amulet."
+        ],
+        "options": []
+      }
+    },
+    "conversation": {
+      "start": {
+        "npc": [
+          "Sorry, we're full."
+        ],
+        "options": [
+          {"text": "I didn't even ask for a room—", "next": "room"}
+        ]
+      },
+      "room": {
+        "npc": "Well, I haven't all day! You want to spend the night and refill your energy or go on your dusty journey?",
+        "options": [
+          {"text": "Hmm, maybe I should spent the night...", "next": "night"},
+          {"text": "Nope.", "next": "end"}
+        ]
+      },
+      "night": {
+        "npc": [
+          "As I said, we're full! \n*You look around the empty room.*" 
+        ],
+        "options": [
+          {"text": "I haven't noticed how huge this wonderfully designed inn is! It must be owned by the richest of men.", "next": "flatter"}
+        ]
+      },
+      "flatter": {
+        "npc": "*You see the pride in the Innkeeper's sight.* \n I believe we do have one empty room...",
+        "options": [
+          {"text": "*Your hunting skills keep you alive and fed, but you don't have any cash.* Is there any way I can stay for no charge?", "next": "free"}
+        ]
+      },
+      "free": {
+        "npc": "*The Innkeeper's face darkens at the very idea of letting a dusty hunter spend the night at his hotel without paying. Suddenly, it brightens once more.* \n I understand you do not have any liquid money… but I'll let you stay for everything in your inventory.",
+        "options": [
+          {"text": "Sure!", "next": "inventory"},
+          {"text": "Not everything!", "next": "everything"}
+        ]
+      },
+    "inventory": {
+           "npc": "*You don't like the oily look in his gaze or his triumphant expression as you hand over all you own simply for a night in the hotel. But it was one of the best nights of your life. You left the hotel feeling rested.*",
+           "options": []
+       },
+
+    "everything": {
+           "npc": "*You clutch your backpack fiercely. You and your precious bag have gone this far; you wouldn't leave anything behind!*",
+           "options": [
+                {"text": "I could mop your floor or wash the inn's dishes—but I'm not giving you anything.", "next": "idea"}
+           ]
+       },
+    "idea": {
+           "npc": "*The Innkeeper's eyes widen as an idea strikes him.* \n I have a different idea… how good are you at finding things?",
+           "options": [
+                {"text": "Ummm...", "next": "umm"}
+           ]
+       },
+    "umm": {
+           "npc": "Have you heard of the famed, legendary deluxe room? Have you heard of why no one goes there any more? Why my inn has fallen from the Guiness World Records of best inns?!",
+           "options": [
+                {"text": "*You take a step back at his excitement.*", "next": "excited"}
+           ]
+       },
+    "excited": {
+        "offers_quest": true,   
+        "npc": "Because no one can go there! Of all things, I've lost the key! And it's up to you to find it! I am a generous and benevolent man, so you need not start right away, but if you don't find the key by the sunset of the morrow you shall be doomed!",
+           "options": [
+                {"text": "I guess I could try to find it...", "next": "accept"},
+                {"text": "That sounds like a lot of work. Maybe another time.", "next": "end"}
+           ]
+       },
+       "accept": {
+        "npc": "Great! I have no idea where it could be, but I'm sure you'll find it! Just look around the inn and ask around town. I'm sure someone has seen it!",
+        "options": []
+      },
+
+      "end": {
+        "npc": "Whatever. Don't waste my time again!",
+        "options": [
+            {"text": "", "next": "down"}
+        ]
+      },
+      "down": {
+        "npc": "*You leave the inn, feeling a little bit bad for the Innkeeper. But you have a long journey ahead of you, and you don't have time to waste on a key hunt.*",
+        "options": []
+      }
+    },
+    "quest": {
+      "id": "innkeeper_key",
+      "title": "Innkeeper's Lost Key",
+      "required_item": "key",
+      "reward_item": "enchanted amulet"
+    }
+  },
   "blacksmith": {
     "name": "Blacksmith",
     "role": "Craftsman",

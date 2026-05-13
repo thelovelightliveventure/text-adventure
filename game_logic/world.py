@@ -151,6 +151,12 @@ world_map[(5, 3)] = {
     "features": ["Bandages", "Herbal Tonic", "Quiet Beds"],
     "doors": ["north"]
 }
+world_map[(5, 8)] = {
+    "name": "Inn", 
+    "features": ["Cozy Fireplace", "Empty Rooms"],
+    "npcs": ["innkeeper"],
+    "doors": ["north", "south", "east", "west"]
+}
 
 
 # Location description function

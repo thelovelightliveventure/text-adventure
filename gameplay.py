@@ -323,7 +323,7 @@ def main(stdscr, initial_save_code=None):
             player_state.setdefault("rest_regen", 6)  # HP regained per loop while resting
 
         render_map(map_win, player_state)
-        render_char(char_win, player_state, named_npcs, gossip_gen)
+        render_char(char_win, player_state, named_npcs, gossip_gen, world_map)
         render_info(info_win, player_state)
 
         # If the player is resting, only allow 'stand' command (health increments each loop).

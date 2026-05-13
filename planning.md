@@ -20,7 +20,7 @@ To develop:
 - COMPLETE OVERWRITE: User customizes user type
 - GOSSIP: remove town gossip, make it NPC-activated
 - MAP: add a "characters in room" so users know they can talk to the characters
-- QUESTS: add a quests line under inventory for current accepted quests
+- QUESTS: change Mayor's quest to have an actual reward and be able to find the map
 
 Current bugs:
 - the characters gossip overwrites boundary lines
@@ -29,6 +29,7 @@ Current bugs:
 - hard to know where the user is right now until you spot the x
 - hunger bar flashes but disappears when poisoned
 - before quitting, ask about saving
+- move before fighting instead of staying in the room 
 
 ---------------------------------
 ---------CODE PLANNING-----------

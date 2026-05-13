@@ -144,15 +144,25 @@ def delete_npc_definition(key):
     return True
 
 
-def render_char(win, player_state, named_npcs, gossip_gen):
+def render_char(win, player_state, named_npcs, gossip_gen, world_map):
     win.clear()
     win.box()
-    win.addstr(1, 2, "Characters in Town:")
+    win.addstr(1, 2, "Characters in Room:")
     y = 2
-    for npc_key, npc in named_npcs.items():
-        if npc.met:
-            win.addstr(y, 4, f"- {npc.name} ({npc.role})")
+    loc = tuple(player_state.get("location", [0, 0]))
+    tile = world_map.get(loc, {})
+    room_npcs = [npc_key for npc_key in tile.get("npcs", []) if isinstance(npc_key, str)]
+    if room_npcs:
+        for npc_key in room_npcs:
+            npc = named_npcs.get(npc_key)
+            if npc:
+                win.addstr(y, 4, f"- {npc.name} ({npc.role})")
+            else:
+                win.addstr(y, 4, f"- {npc_key}")
             y += 1
+    else:
+        win.addstr(y, 4, "(none)")
+        y += 1
     win.addstr(y + 1, 2, "Gossip:")
     gossip = gossip_gen.get_gossip()
     win.addstr(y + 2, 4, f"\"{gossip}\"")
