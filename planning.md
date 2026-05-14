@@ -6,7 +6,6 @@ Self-notes (notes for coding):
 
 To develop:
 - CONSOLE: Make a help menu for commands and expand menu (kill, hunt, loot, examine, befriend animal)
-- CHARACTERS: Make a way for NPCs with backstories to interact with users.
 - COMBAT: add weapons and armor to reduce damage, add creature loot tables, add hunt
 - CREATURES: make animals stay near where they spawned for consistency
 - COMBAT: you start out with a somewhat useless dagger, determines your damage

@@ -628,13 +628,16 @@ def main(stdscr, initial_save_code=None):
             # If "doors" is absent (outdoor/open tiles), allow movement freely.
             doors = current_tile.get("doors", None)
             if (doors is None) or (command in doors):
-                if command in "north": y -= 1
-                elif command in "south": y += 1
-                elif command in "east": x += 1
-                elif command in "west": x -= 1
+                if command == "north": y -= 1
+                elif command == "south": y += 1
+                elif command == "east": x += 1
+                elif command == "west": x -= 1
                 player_state["location"] = [x, y]
                 if (x, y) not in player_state["explored"]:
                     player_state["explored"].append((x, y))
+                # Refresh the map/info display before a possible encounter so the player sees the new room.
+                render_map(map_win, player_state)
+                render_info(info_win, player_state)
             else:
                 show_msg(input_win, [f"You can't go {command} from here."], wait_ms=900)
                 
