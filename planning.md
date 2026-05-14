@@ -28,7 +28,6 @@ Current bugs:
 - hard to know where the user is right now until you spot the x
 - hunger bar flashes but disappears when poisoned
 - before quitting, ask about saving
-- move before fighting instead of staying in the room 
 
 ---------------------------------
 ---------CODE PLANNING-----------

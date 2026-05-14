@@ -713,7 +713,7 @@ def main(stdscr, initial_save_code=None):
 
         elif command == "save":
             code = generate_save_code(player_state)
-            show_msg(input_win, ["Your save code:", code], wait_ms=2800)
+            show_msg(input_win, ["Your save code:", code, "", "Press any key once you've saved it."], wait_for_key=True)
 
         elif command == "quit":
             input_win.clear()
@@ -726,10 +726,22 @@ def main(stdscr, initial_save_code=None):
             if confirm == "y":
                 input_win.clear()
                 input_win.box()
-                input_win.addstr(1, 2, "Thanks for playing!")
+                input_win.addstr(1, 2, "Do you want to save before quitting? (y/n)")
                 input_win.refresh()
-                curses.napms(1500)
-                break
+                curses.echo()
+                save_confirm = input_win.getstr(2, 2).decode("utf-8").strip().lower()
+                curses.noecho()
+
+                if save_confirm == "y":
+                    code = generate_save_code(player_state)
+                    show_msg(input_win, ["Your save code:", code, "", "Press any key once you've saved it."], wait_for_key=True)
+                else:
+                    input_win.clear()
+                    input_win.box()
+                    input_win.addstr(1, 2, "Quitting without saving...")
+                    input_win.refresh()
+                    curses.napms(1500)
+                    break
             else:
                 show_msg(input_win, ["Quit cancelled."], wait_ms=900)
 
