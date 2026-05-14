@@ -2,6 +2,8 @@ from game_logic import (
     GossipGenerator, 
     named_npcs, 
     load_from_code, 
+    load_from_file,
+    save_to_file,
     generate_save_code, 
     render_map, 
     render_info,
@@ -22,7 +24,7 @@ import sys
 
 ADMIN_PASSWORD = "admin123"
 
-def main(stdscr, initial_save_code=None):
+def main(stdscr, initial_save_code=None, load_save_file=False):
     curses.curs_set(0) # Hide cursor
     curses.start_color()
     # allow terminal default background (better on Windows)
@@ -84,8 +86,10 @@ def main(stdscr, initial_save_code=None):
         "admin": False
     }
 
-    # Initialize player_state from provided save code (if any)
-    if initial_save_code:
+    # Initialize player_state from provided save code or local save file (if requested).
+    if load_save_file:
+        player_state = load_from_file() or default_state
+    elif initial_save_code:
         player_state = load_from_code(initial_save_code) or default_state
     else:
         player_state = default_state
@@ -712,8 +716,23 @@ def main(stdscr, initial_save_code=None):
                 show_msg(input_win, ["You're not poisoned."], wait_ms=900)
 
         elif command == "save":
+            save_path = save_to_file(player_state)
+            show_msg(input_win, [f"Save complete!", f"Saved to local file:", f"{save_path}", "", "Press any key to continue."], wait_for_key=True)
+
+        elif command == "save code":
             code = generate_save_code(player_state)
             show_msg(input_win, ["Your save code:", code, "", "Press any key once you've saved it."], wait_for_key=True)
+
+        elif command == "load":
+            loaded_state = load_from_file()
+            if loaded_state:
+                player_state.clear()
+                player_state.update(loaded_state)
+                show_msg(input_win, ["Loaded savegame from file.", "Press any key to continue."], wait_for_key=True)
+                # Re-ensure admin flag is present
+                player_state.setdefault("admin", False)
+            else:
+                show_msg(input_win, ["No local save file found.", "Save a game first with 'save'."], wait_for_key=True)
 
         elif command == "quit":
             input_win.clear()
@@ -746,7 +765,7 @@ def main(stdscr, initial_save_code=None):
                 show_msg(input_win, ["Quit cancelled."], wait_ms=900)
 
         elif command == "help":
-            show_msg(input_win, ["Commands: north, south, east, west, talk, inventory, save, help, quit"], wait_ms=2200)
+            show_msg(input_win, ["Commands: north, south, east, west, talk, inventory, save, save code, load, help, quit"], wait_ms=2200)
 
         elif command == "status":
             effects = player_state.get("status_effects", [])
@@ -764,18 +783,23 @@ def main(stdscr, initial_save_code=None):
     
 if __name__ == "__main__":
     try:
-        choice = input("Do you want to enter a save code to continue? (y/n): ").lower()
+        choice = input("Load local save file (savegame.json)? (y/n): ").lower()
         if choice == "y":
-            code = input("Paste your save code: ")
-            initial_save_code = code
+            initial_save_code = None
+            use_save_file = True
         else:
             initial_save_code = None
+            use_save_file = False
+            choice = input("Do you want to enter a save code to continue? (y/n): ").lower()
+            if choice == "y":
+                initial_save_code = input("Paste your save code: ")
     except Exception:
         initial_save_code = None
+        use_save_file = False
 
     import traceback
     try:
-        curses.wrapper(lambda stdscr: main(stdscr, initial_save_code))
+        curses.wrapper(lambda stdscr: main(stdscr, initial_save_code, use_save_file))
     except Exception as e:
         with open("error.log", "w", encoding="utf-8") as f:
             f.write("Unhandled exception in curses UI:\n\n")
