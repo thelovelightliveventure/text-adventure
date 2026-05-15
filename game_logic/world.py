@@ -109,50 +109,58 @@ for x in range(10):
     for y in range(10):
         if 3 <= x <= 6 and 3 <= y <= 6:
             # Village zone
-            world_map[(x, y)] = {"name": "Village Outskirts"}
+            world_map[(x, y)] = {"name": "Village Outskirts", "description": "The worn dirt roads wind through quiet village buildings."}
         else:
-            world_map[(x, y)] = {"name": "Forest"}
+            world_map[(x, y)] = {"name": "Forest", "description": "You walk into a dense forest with towering trees. Sunlight filters through the canopy."}
 
 # Add landmarks and NPCs
 world_map[(5, 5)] = {
     "name": "Village Center", 
+    "description": "You walk into the bustling village center. A well sits in the middle of the square, with a bell tower looming above.",
     "features": ["Bell Tower", "Well"], 
     "npcs": ["Villager"],
     "doors": ["north", "south", "east", "west"]
 }
 world_map[(5, 6)] = {
     "name": "North Street", 
+    "description": "You walk into the north street. Simple houses line both sides, with gentle weathered doors.",
     "npcs": ["child"],
     "doors": ["north", "south"]
 }
 world_map[(5, 7)] = {
     "name": "Mayor's House", 
+    "description": "You walk into an elegant stone building. It's the Mayor's house—well-kept and impressive.",
     "features": ["Mayor's Map"], 
     "npcs": ["mayor"],
     "doors": ["south"]
 }
 world_map[(4, 5)] = {
     "name": "West Street", 
+    "description": "You walk into the west street. The smell of smoke and metal fills the air from the blacksmith's forge.",
     "npcs": ["blacksmith"],
     "doors": ["east", "west"]
 }
 world_map[(6, 5)] = {
     "name": "East Street", 
+    "description": "You walk into the east street. The sounds of farming tools and animals echo from nearby fields.",
     "npcs": ["farmer"],
     "doors": ["east", "west"]
 }
 world_map[(5, 4)] = {
     "name": "South Street", 
+    "description": "You walk into the south street. A guard stands alert, watching for any trouble.",
     "npcs": ["guard"],
     "doors": ["north", "south"]
 }
 world_map[(5, 3)] = {
     "name": "Infirmary", 
+    "description": "You walk into the infirmary. The air is clean and the beds are neatly arranged.",
     "features": ["Bandages", "Herbal Tonic", "Quiet Beds"],
     "doors": ["north"]
 }
 world_map[(5, 8)] = {
     "name": "Inn", 
+    "description": "You walk into the inn. It's dusty and old, but warm. A cozy fireplace flickers with life.",
     "features": ["Cozy Fireplace", "Empty Rooms"],
     "npcs": ["innkeeper"],
     "doors": ["north", "south", "east", "west"]
@@ -182,6 +190,24 @@ def describe_location(location, gossip_gen, player_state):
                             print(f"- Unknown NPC reference: {npc_ref}")
     else:
         print("You are in an unremarkable part of the forest.")
+
+def get_room_description(location, player_state):
+    """
+    Returns a list of description strings for a location.
+    Includes the base room description only; creature descriptions are shown
+    during actual combat encounters.
+    """
+    loc = tuple(location)
+    tile = world_map.get(loc, {})
+    description_lines = []
+    
+    # Add base room description
+    if "description" in tile:
+        description_lines.append(tile["description"])
+    else:
+        description_lines.append(f"You walk into {tile.get('name', 'an unknown place')}.")
+    
+    return description_lines
 
 def normalize_direction(command):
     command = command.lower().strip()

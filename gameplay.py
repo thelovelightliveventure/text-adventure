@@ -17,7 +17,8 @@ from game_logic import (
     save_npcs,
     update_npc_definition,
     create_npc_definition,
-    delete_npc_definition
+    delete_npc_definition,
+    get_room_description
 )
 import random, curses
 import sys
@@ -317,6 +318,10 @@ def main(stdscr, initial_save_code=None, load_save_file=False):
         return None, None, None
 
     while True:
+        # Poison damage applies over time while the effect is active.
+        if "Poisoned" in player_state.get("status_effects", []) and player_state.get("health", 100) > 0:
+            player_state["health"] = max(0, player_state.get("health", 100) - 1)
+
         # If dead, move to infirmary and enter resting mode (health regenerates incrementally).
         if player_state.get("health", 100) <= 0 and not player_state.get("resting"):
             show_msg(input_win, ["You collapse from your wounds...", "You awaken in the Infirmary."], wait_ms=1600)
@@ -343,7 +348,7 @@ def main(stdscr, initial_save_code=None, load_save_file=False):
             input_win.clear()
             input_win.box()
             input_win.refresh()
-            command = get_command(input_win)
+            command = get_command(input_win, player_state, info_win, render_info)
             if not command:
                 continue
             command = command.strip()
@@ -363,7 +368,7 @@ def main(stdscr, initial_save_code=None, load_save_file=False):
         input_win.clear()
         input_win.box()
         input_win.refresh()
-        command = get_command(input_win)
+        command = get_command(input_win, player_state, info_win, render_info)
         # sanitize command input: ignore empty or stray single-punctuation inputs and normalize
         if not command:
             continue
@@ -642,6 +647,7 @@ def main(stdscr, initial_save_code=None, load_save_file=False):
                 # Refresh the map/info display before a possible encounter so the player sees the new room.
                 render_map(map_win, player_state)
                 render_info(info_win, player_state)
+                render_char(char_win, player_state, named_npcs, gossip_gen, world_map)
             else:
                 show_msg(input_win, [f"You can't go {command} from here."], wait_ms=900)
                 

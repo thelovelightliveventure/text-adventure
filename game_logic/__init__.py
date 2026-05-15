@@ -8,8 +8,8 @@ from .characters import (
     delete_npc_definition,
     get_npc_definition
 )
-from .persistence import load_from_code, generate_save_code
-from .world import render_map, world_map, normalize_direction
+from .persistence import load_from_code, load_from_file, save_to_file, generate_save_code
+from .world import render_map, world_map, normalize_direction, get_room_description
 from .creatures import forest_creatures
 from .combat import engage_combat
 from .interface import render_info, get_command

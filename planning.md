@@ -26,8 +26,10 @@ Current bugs:
 - exclamation mark in input box
 - arrows are currently useless
 - hard to know where the user is right now until you spot the x
-- hunger bar flashes but disappears when poisoned
-- before quitting, ask about saving
+- poison bar flash white and red instead of black
+- poison "cure" does not require a spceific medicine
+
+
 
 ---------------------------------
 ---------CODE PLANNING-----------

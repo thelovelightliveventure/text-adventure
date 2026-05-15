@@ -2,6 +2,7 @@
 
 import json
 import random
+import curses
 from pathlib import Path
 
 NPC_DATA_FILE = Path(__file__).parent / "npcs.json"
@@ -145,27 +146,95 @@ def delete_npc_definition(key):
 
 
 def render_char(win, player_state, named_npcs, gossip_gen, world_map):
+    from .world import get_room_description
     win.clear()
     win.box()
-    win.addstr(1, 2, "Characters in Room:")
-    y = 2
+    y = 1
+    
+    # Get window width for text wrapping
+    height, width = win.getmaxyx()
+    max_text_width = width - 4  # Leave margins
+    
+    def wrap_text(text, width):
+        """Wrap text to fit within width"""
+        words = text.split()
+        lines = []
+        current_line = ""
+        for word in words:
+            if len(current_line) + len(word) + 1 <= width:
+                current_line += (word if not current_line else " " + word)
+            else:
+                if current_line:
+                    lines.append(current_line)
+                current_line = word
+        if current_line:
+            lines.append(current_line)
+        return lines
+    
+    # Display room description
     loc = tuple(player_state.get("location", [0, 0]))
     tile = world_map.get(loc, {})
+    
+    room_descriptions = get_room_description(loc, player_state)
+    for desc in room_descriptions:
+        wrapped_lines = wrap_text(desc, max_text_width)
+        for line in wrapped_lines:
+            try:
+                win.addstr(y, 2, line)
+                y += 1
+                if y >= height - 5:  # Leave room for characters/gossip
+                    break
+            except curses.error:
+                pass
+        if y >= height - 5:
+            break
+    
+    y += 1
+    try:
+        win.addstr(y, 2, "Characters in Room:")
+        y += 1
+    except curses.error:
+        pass
+    
     room_npcs = [npc_key for npc_key in tile.get("npcs", []) if isinstance(npc_key, str)]
     if room_npcs:
         for npc_key in room_npcs:
             npc = named_npcs.get(npc_key)
             if npc:
-                win.addstr(y, 4, f"- {npc.name} ({npc.role})")
+                try:
+                    win.addstr(y, 4, f"- {npc.name} ({npc.role})")
+                except curses.error:
+                    pass
             else:
-                win.addstr(y, 4, f"- {npc_key}")
+                try:
+                    win.addstr(y, 4, f"- {npc_key}")
+                except curses.error:
+                    pass
             y += 1
+            if y >= height - 3:
+                break
     else:
-        win.addstr(y, 4, "(none)")
+        try:
+            win.addstr(y, 4, "(none)")
+        except curses.error:
+            pass
         y += 1
-    win.addstr(y + 1, 2, "Gossip:")
-    gossip = gossip_gen.get_gossip()
-    win.addstr(y + 2, 4, f"\"{gossip}\"")
+    
+    y += 1
+    try:
+        win.addstr(y, 2, "Gossip:")
+        y += 1
+        gossip = gossip_gen.get_gossip()
+        wrapped_gossip = wrap_text(gossip, max_text_width - 2)
+        for line in wrapped_gossip:
+            try:
+                win.addstr(y, 4, line)
+                y += 1
+            except curses.error:
+                pass
+    except curses.error:
+        pass
+    
     win.refresh()
 
 class NPC:
