@@ -10,7 +10,7 @@ from .characters import (
 )
 from .persistence import load_from_code, load_from_file, save_to_file, generate_save_code
 from .world import render_map, world_map, normalize_direction, get_room_description
-from .creatures import forest_creatures
+from .creatures import forest_creatures, initialize_creatures, update_creatures
 from .combat import engage_combat
 from .interface import render_info, get_command
 from .food import food

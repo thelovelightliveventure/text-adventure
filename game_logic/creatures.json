@@ -1,0 +1,78 @@
+{
+  "creatures": [
+    {
+      "id": "deer_1",
+      "name": "Deer",
+      "description": "A deer is grazing peacefully nearby.",
+      "behavior": "passive",
+      "damage": 5,
+      "food_reward": 15,
+      "health": 30,
+      "spawn_location": [2, 2],
+      "spawn_probability": 0.8,
+      "current_location": [2, 2]
+    },
+    {
+      "id": "deer_2",
+      "name": "Deer",
+      "description": "A graceful doe looks up from eating grass.",
+      "behavior": "passive",
+      "damage": 5,
+      "food_reward": 15,
+      "health": 30,
+      "spawn_location": [8, 8],
+      "spawn_probability": 0.7,
+      "current_location": [8, 8]
+    },
+    {
+      "id": "wolf_1",
+      "name": "Wolf",
+      "description": "A wolf prowls through the shadows, watching you intently.",
+      "behavior": "aggressive",
+      "damage": 15,
+      "food_reward": 10,
+      "health": 75,
+      "spawn_location": [1, 5],
+      "spawn_probability": 0.5,
+      "current_location": [1, 5]
+    },
+    {
+      "id": "wolf_2",
+      "name": "Wolf",
+      "description": "A gray wolf emerges from behind the trees, snarling.",
+      "behavior": "aggressive",
+      "damage": 15,
+      "food_reward": 10,
+      "health": 75,
+      "spawn_location": [8, 1],
+      "spawn_probability": 0.4,
+      "current_location": [8, 1]
+    },
+    {
+      "id": "boar_1",
+      "name": "Wild Boar",
+      "description": "A wild boar sniffs the ground nearby, tusks gleaming.",
+      "behavior": "conditional",
+      "damage": 10,
+      "food_reward": 40,
+      "health": 40,
+      "spawn_location": [0, 0],
+      "spawn_probability": 0.6,
+      "current_location": [0, 0],
+      "hostility_flag": "boar_attacked"
+    },
+    {
+      "id": "boar_2",
+      "name": "Wild Boar",
+      "description": "An angry boar paws at the ground, ready to charge.",
+      "behavior": "conditional",
+      "damage": 10,
+      "food_reward": 40,
+      "health": 40,
+      "spawn_location": [9, 9],
+      "spawn_probability": 0.5,
+      "current_location": [9, 9],
+      "hostility_flag": "boar_attacked"
+    }
+  ]
+}

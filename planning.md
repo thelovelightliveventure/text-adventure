@@ -22,14 +22,11 @@ To develop:
 - QUESTS: change Mayor's quest to have an actual reward and be able to find the map
 
 Current bugs:
-- the characters gossip overwrites boundary lines
 - exclamation mark in input box
 - arrows are currently useless
 - hard to know where the user is right now until you spot the x
 - poison bar flash white and red instead of black
 - poison "cure" does not require a spceific medicine
-
-
 
 ---------------------------------
 ---------CODE PLANNING-----------

@@ -18,7 +18,9 @@ from game_logic import (
     update_npc_definition,
     create_npc_definition,
     delete_npc_definition,
-    get_room_description
+    get_room_description,
+    initialize_creatures,
+    update_creatures
 )
 import random, curses
 import sys
@@ -100,6 +102,10 @@ def main(stdscr, initial_save_code=None, load_save_file=False):
     start_loc = tuple(player_state.get("location", [0, 0]))
     if start_loc not in player_state.get("explored", []):
         player_state.setdefault("explored", []).append(start_loc)
+    
+    # Initialize creatures on game start
+    if "creatures" not in player_state:
+        initialize_creatures(player_state)
 
     # Create gossip generator
     gossip_gen = GossipGenerator()
@@ -321,6 +327,9 @@ def main(stdscr, initial_save_code=None, load_save_file=False):
         # Poison damage applies over time while the effect is active.
         if "Poisoned" in player_state.get("status_effects", []) and player_state.get("health", 100) > 0:
             player_state["health"] = max(0, player_state.get("health", 100) - 1)
+        
+        # Update creature positions
+        update_creatures(player_state)
 
         # If dead, move to infirmary and enter resting mode (health regenerates incrementally).
         if player_state.get("health", 100) <= 0 and not player_state.get("resting"):
@@ -651,34 +660,35 @@ def main(stdscr, initial_save_code=None, load_save_file=False):
             else:
                 show_msg(input_win, [f"You can't go {command} from here."], wait_ms=900)
                 
-            # Random encounter in the forest
-            tile = world_map.get((x, y), {})
-            if tile.get("name") == "Forest":
-                # Random being encountered event
-                if random.random() < 0.4:
-                    creature = random.choice(forest_creatures)
-                    # skip invalid creature entries (guard against None or malformed entries)
-                    if not creature or (isinstance(creature, dict) and not creature.get("name")):
-                        # no creature spawned — safe skip
-                        continue
+            # Check for creatures at current location
+            current_loc = tuple((x, y))
+            creatures_here = player_state.get("creatures", {})
+            if creatures_here:
+                for creature_id, creature in list(creatures_here.items()):
+                    if tuple(creature.current_location) == current_loc:
+                        # Combat encounter!
+                        combat_result = engage_combat(input_win, player_state, creature)
+                        # Decide if the player was bitten:
+                        bitten = False
+                        if isinstance(combat_result, dict):
+                            # if engage_combat returns structured info, respect it
+                            bitten = combat_result.get("player_bitten", False)
+                        else:
+                            # unknown return: fall back to a small random chance
+                            if random.random() < 0.1:
+                                bitten = True
 
-                    combat_result = engage_combat(input_win, player_state, creature)
-                    # Decide if the player was bitten:
-                    bitten = False
-                    if isinstance(combat_result, dict):
-                        # if engage_combat returns structured info, respect it
-                        bitten = combat_result.get("player_bitten", False)
-                    else:
-                        # unknown return: fall back to a small random chance
-                        if random.random() < 0.1:
-                            bitten = True
-
-                    if bitten:
-                        show_msg(input_win, [
-                            "The creature bites you!",
-                            "You feel a burning sensation... You're poisoned!"
-                        ], wait_ms=1400)
-                        player_state.setdefault("status_effects", []).append("Poisoned")
+                        if bitten:
+                            show_msg(input_win, [
+                                "The creature bites you!",
+                                "You feel a burning sensation... You're poisoned!"
+                            ], wait_ms=1400)
+                            player_state.setdefault("status_effects", []).append("Poisoned")
+                        
+                        # Remove defeated creature from the map
+                        if creature.health <= 0:
+                            del creatures_here[creature_id]
+                        break  # Only encounter one creature per turn
 
         elif command == "inventory":
             show_msg(input_win, [f"Inventory: {', '.join(player_state.get('inventory', []))}"], wait_ms=1400)

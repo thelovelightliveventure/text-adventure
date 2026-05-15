@@ -197,6 +197,15 @@ def render_char(win, player_state, named_npcs, gossip_gen, world_map):
         pass
     
     room_npcs = [npc_key for npc_key in tile.get("npcs", []) if isinstance(npc_key, str)]
+    creatures_here = []
+    
+    # Check for creatures at this location
+    creatures = player_state.get("creatures", {})
+    for creature_id, creature in creatures.items():
+        if tuple(creature.current_location) == loc:
+            creatures_here.append(creature)
+    
+    # Display NPCs
     if room_npcs:
         for npc_key in room_npcs:
             npc = named_npcs.get(npc_key)
@@ -213,7 +222,20 @@ def render_char(win, player_state, named_npcs, gossip_gen, world_map):
             y += 1
             if y >= height - 3:
                 break
-    else:
+    
+    # Display creatures
+    if creatures_here:
+        for creature in creatures_here:
+            try:
+                win.addstr(y, 4, f"- {creature.name} (hostile: {creature.is_hostile(player_state)})")
+            except curses.error:
+                pass
+            y += 1
+            if y >= height - 3:
+                break
+    
+    # Show (none) if no NPCs or creatures
+    if not room_npcs and not creatures_here:
         try:
             win.addstr(y, 4, "(none)")
         except curses.error:
