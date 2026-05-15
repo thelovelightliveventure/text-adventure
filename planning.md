@@ -24,10 +24,10 @@ To develop:
 
 Current bugs:
 - exclamation mark in input box
-- arrows are currently useless
+- arrows are currently useless, doors are not referenced
 - hard to know where the user is right now until you spot the x
 - poison bar flash white and red instead of black
-- poison "cure" does not require a spceific medicine
+- poison "cure" does not require a specific medicine
 
 ---------------------------------
 ---------CODE PLANNING-----------
