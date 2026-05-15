@@ -20,6 +20,7 @@ To develop:
 - GOSSIP: remove town gossip, make it NPC-activated
 - MAP: add a "characters in room" so users know they can talk to the characters
 - QUESTS: change Mayor's quest to have an actual reward and be able to find the map
+- COMBAT: users should choose to attack or flee
 
 Current bugs:
 - exclamation mark in input box

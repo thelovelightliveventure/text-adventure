@@ -6,7 +6,8 @@ CREATURES_DATA_FILE = Path(__file__).parent / "creatures.json"
 
 class Creature:
     def __init__(self, creature_id, name, behavior, damage, food_reward, health=100, 
-                 description="", spawn_location=None, hostility_flag=None, spawn_probability=0.7):
+                 description="", spawn_location=None, hostility=False, hostility_flag=None,
+                 spawn_probability=0.7, attack_probability=0.3):
         self.id = creature_id
         self.name = name
         self.behavior = behavior  # "passive", "aggressive", "conditional", etc
@@ -16,10 +17,14 @@ class Creature:
         self.creature_description = description or f"A {name.lower()} is nearby."
         self.spawn_location = spawn_location or [0, 0]
         self.current_location = list(spawn_location) if spawn_location else [0, 0]
+        self.hostility = hostility
         self.hostility_flag = hostility_flag
         self.spawn_probability = spawn_probability
+        self.attack_probability = attack_probability
 
     def is_hostile(self, player_state):
+        if self.hostility:
+            return True
         if self.behavior == "aggressive":
             return True
         elif self.behavior == "passive":
@@ -56,8 +61,10 @@ def load_creatures_from_json():
                 health=creature_data.get("health", 30),
                 description=creature_data.get("description", ""),
                 spawn_location=creature_data.get("spawn_location", [0, 0]),
+                hostility=creature_data.get("hostile", False),
                 hostility_flag=creature_data.get("hostility_flag", None),
-                spawn_probability=creature_data.get("spawn_probability", 0.7)
+                spawn_probability=creature_data.get("spawn_probability", 0.7),
+                attack_probability=creature_data.get("attack_probability", 0.3)
             )
             creatures[creature.id] = creature
     except Exception as e:

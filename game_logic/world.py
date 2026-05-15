@@ -1,9 +1,72 @@
 from .characters import NPC, named_npcs
 import curses
+import json
+from pathlib import Path
 
 ###################################
 ######### Map Rendering ###########
 ###################################
+
+MAP_DATA_FILE = Path(__file__).parent / "map_data.json"
+
+
+def load_world_map():
+    """Load map tile definitions from JSON."""
+    default_width = 10
+    default_height = 10
+    default_tile = {
+        "name": "Forest",
+        "description": "You walk into a dense forest with towering trees. Sunlight filters through the canopy."
+    }
+    world_map = {}
+
+    if not MAP_DATA_FILE.exists():
+        for x in range(default_width):
+            for y in range(default_height):
+                world_map[(x, y)] = default_tile.copy()
+        return world_map
+
+    try:
+        with open(MAP_DATA_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        size = data.get("size", [default_width, default_height])
+        width, height = size[0], size[1]
+        default_tile = data.get("default_tile", default_tile)
+
+        for x in range(width):
+            for y in range(height):
+                world_map[(x, y)] = default_tile.copy()
+
+        for zone in data.get("zones", []):
+            tile = zone.get("tile", {})
+            x1 = zone.get("x1", 0)
+            y1 = zone.get("y1", 0)
+            x2 = zone.get("x2", width - 1)
+            y2 = zone.get("y2", height - 1)
+            for x in range(x1, x2 + 1):
+                for y in range(y1, y2 + 1):
+                    if 0 <= x < width and 0 <= y < height:
+                        world_map[(x, y)] = tile.copy()
+
+        for special in data.get("special_tiles", []):
+            x = special.get("x")
+            y = special.get("y")
+            tile = special.get("tile", {})
+            if x is not None and y is not None:
+                world_map[(x, y)] = tile.copy()
+
+    except Exception as e:
+        print(f"Error loading map data from JSON: {e}")
+        for x in range(default_width):
+            for y in range(default_height):
+                world_map[(x, y)] = default_tile.copy()
+
+    return world_map
+
+
+world_map = load_world_map()
+
 
 def render_map(win, player_state):
     """
@@ -20,12 +83,13 @@ def render_map(win, player_state):
     explored = set(player_state.get("explored", []))
     px, py = player_state["location"]
 
-    # Define visible window size
-    visible_w = 11  # tiles across
-    visible_h = 7   # tiles down
+    # Use the window size to determine how many tiles can be drawn
+    height, width = win.getmaxyx()
     tile_size = 3
     offset_y = 1
     offset_x = 2
+    visible_w = max(3, min((width - offset_x - 1) // tile_size, 20))
+    visible_h = max(3, min(height - offset_y - 4, 12))
 
     # Calculate top-left corner of visible map
     start_x = px - visible_w // 2
@@ -93,79 +157,12 @@ def render_map(win, player_state):
 
     loc = tuple(player_state["location"])
     room = world_map.get(loc, {}).get("name", "Unknown")
+    status_y = min(height - 2, offset_y + visible_h)
     try:
-        win.addstr(visible_h + 2, 2, f"Location: {player_state['location']} — {room}")
+        win.addstr(status_y, 2, f"Location: {player_state['location']} — {room}")
     except curses.error:
         pass
     win.refresh()
-
-#####################
-##### WORLD MAP #####
-#####################
-
-# Generate a 10x10 grid with a village in the center
-world_map = {}
-for x in range(10):
-    for y in range(10):
-        if 3 <= x <= 6 and 3 <= y <= 6:
-            # Village zone
-            world_map[(x, y)] = {"name": "Village Outskirts", "description": "The worn dirt roads wind through quiet village buildings."}
-        else:
-            world_map[(x, y)] = {"name": "Forest", "description": "You walk into a dense forest with towering trees. Sunlight filters through the canopy."}
-
-# Add landmarks and NPCs
-world_map[(5, 5)] = {
-    "name": "Village Center", 
-    "description": "You walk into the bustling village center. A well sits in the middle of the square, with a bell tower looming above.",
-    "features": ["Bell Tower", "Well"], 
-    "npcs": ["Villager"],
-    "doors": ["north", "south", "east", "west"]
-}
-world_map[(5, 6)] = {
-    "name": "North Street", 
-    "description": "You walk into the north street. Simple houses line both sides, with gentle weathered doors.",
-    "npcs": ["child"],
-    "doors": ["north", "south"]
-}
-world_map[(5, 7)] = {
-    "name": "Mayor's House", 
-    "description": "You walk into an elegant stone building. It's the Mayor's house—well-kept and impressive.",
-    "features": ["Mayor's Map"], 
-    "npcs": ["mayor"],
-    "doors": ["south"]
-}
-world_map[(4, 5)] = {
-    "name": "West Street", 
-    "description": "You walk into the west street. The smell of smoke and metal fills the air from the blacksmith's forge.",
-    "npcs": ["blacksmith"],
-    "doors": ["east", "west"]
-}
-world_map[(6, 5)] = {
-    "name": "East Street", 
-    "description": "You walk into the east street. The sounds of farming tools and animals echo from nearby fields.",
-    "npcs": ["farmer"],
-    "doors": ["east", "west"]
-}
-world_map[(5, 4)] = {
-    "name": "South Street", 
-    "description": "You walk into the south street. A guard stands alert, watching for any trouble.",
-    "npcs": ["guard"],
-    "doors": ["north", "south"]
-}
-world_map[(5, 3)] = {
-    "name": "Infirmary", 
-    "description": "You walk into the infirmary. The air is clean and the beds are neatly arranged.",
-    "features": ["Bandages", "Herbal Tonic", "Quiet Beds"],
-    "doors": ["north"]
-}
-world_map[(5, 8)] = {
-    "name": "Inn", 
-    "description": "You walk into the inn. It's dusty and old, but warm. A cozy fireplace flickers with life.",
-    "features": ["Cozy Fireplace", "Empty Rooms"],
-    "npcs": ["innkeeper"],
-    "doors": ["north", "south", "east", "west"]
-}
-
 
 # Location description function
 def describe_location(location, gossip_gen, player_state):

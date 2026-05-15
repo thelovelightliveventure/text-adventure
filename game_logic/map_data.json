@@ -1,0 +1,104 @@
+{
+  "size": [10, 10],
+  "default_tile": {
+    "name": "Forest",
+    "description": "You walk into a dense forest with towering trees. Sunlight filters through the canopy."
+  },
+  "zones": [
+    {
+      "x1": 3,
+      "y1": 3,
+      "x2": 6,
+      "y2": 6,
+      "tile": {
+        "name": "Village Outskirts",
+        "description": "The worn dirt roads wind through quiet village buildings."
+      }
+    }
+  ],
+  "special_tiles": [
+    {
+      "x": 5,
+      "y": 5,
+      "tile": {
+        "name": "Village Center",
+        "description": "You walk into the bustling village center. A well sits in the middle of the square, with a bell tower looming above.",
+        "features": ["Bell Tower", "Well"],
+        "npcs": ["Villager"],
+        "doors": ["north", "south", "east", "west"]
+      }
+    },
+    {
+      "x": 5,
+      "y": 6,
+      "tile": {
+        "name": "North Street",
+        "description": "You walk into the north street. Simple houses line both sides, with gentle weathered doors.",
+        "npcs": ["child"],
+        "doors": ["north", "south"]
+      }
+    },
+    {
+      "x": 5,
+      "y": 7,
+      "tile": {
+        "name": "Mayor's House",
+        "description": "You walk into an elegant stone building. It's the Mayor's house—well-kept and impressive.",
+        "features": ["Mayor's Map"],
+        "npcs": ["mayor"],
+        "doors": ["south"]
+      }
+    },
+    {
+      "x": 4,
+      "y": 5,
+      "tile": {
+        "name": "West Street",
+        "description": "You walk into the west street. The smell of smoke and metal fills the air from the blacksmith's forge.",
+        "npcs": ["blacksmith"],
+        "doors": ["east", "west"]
+      }
+    },
+    {
+      "x": 6,
+      "y": 5,
+      "tile": {
+        "name": "East Street",
+        "description": "You walk into the east street. The sounds of farming tools and animals echo from nearby fields.",
+        "npcs": ["farmer"],
+        "doors": ["east", "west"]
+      }
+    },
+    {
+      "x": 5,
+      "y": 4,
+      "tile": {
+        "name": "South Street",
+        "description": "You walk into the south street. A guard stands alert, watching for any trouble.",
+        "npcs": ["guard"],
+        "doors": ["north", "south"]
+      }
+    },
+    {
+      "x": 5,
+      "y": 3,
+      "tile": {
+        "name": "Infirmary",
+        "description": "You walk into the infirmary. The air is clean and the beds are neatly arranged.",
+        "features": ["Bandages", "Herbal Tonic", "Quiet Beds"],
+        "doors": ["north"]
+      }
+    },
+    {
+      "x": 5,
+      "y": 8,
+      "tile": {
+        "name": "Inn",
+        "description": "You walk into the inn. It's dusty and old, but warm. A cozy fireplace flickers with life.",
+        "features": ["Cozy Fireplace", "Empty Rooms"],
+        "npcs": ["innkeeper"],
+        "doors": ["north", "south", "east", "west"]
+      }
+    }
+  ]
+}
